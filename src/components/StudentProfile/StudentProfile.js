@@ -11,6 +11,7 @@ const StudentProfile = () => {
     full_name: '',
     email: '',
     role: '',
+    id: '' // Ensure userId is stored
   });
   const [formData, setFormData] = useState({
     firstName: '',
@@ -19,13 +20,18 @@ const StudentProfile = () => {
     password: '',
     confirmPassword: '',
   });
-  // Add wishlist-related states from SchoolProfile
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistError, setWishlistError] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+  const [coupons, setCoupons] = useState([]);
+  const [couponsLoading, setCouponsLoading] = useState(false);
+  const [couponsError, setCouponsError] = useState(null);
+  const [rewardPoints, setRewardPoints] = useState(0); // School reward points
 
-  // Function to generate slug (copied from SchoolProfile)
+  // Function to generate slug
   const generateSlug = (name) => {
     return name
       .toLowerCase()
@@ -35,7 +41,7 @@ const StudentProfile = () => {
       .substring(0, 200);
   };
 
-  // Function to remove item from wishlist (adapted from SchoolProfile)
+  // Function to remove item from wishlist
   const handleRemoveFromWishlist = async (productId) => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (!storedUser || !storedUser.id) return;
@@ -53,56 +59,139 @@ const StudentProfile = () => {
     }
   };
 
+  const handleApplyCoupon = async (couponCode) => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (!storedUser || !storedUser.id) {
+      alert('Please log in to apply a coupon.');
+      return;
+    }
+  
+    try {
+      const response = await axios.post('http://localhost:5000/api/coupons/validate', {
+        code: couponCode,
+        userId: storedUser.id,
+        userType: 'student',
+      });
+  
+      if (response.data.valid) {
+        alert(`Coupon ${couponCode} applied successfully! Discount: ${response.data.discount_percentage}%`);
+        // Add logic here to apply the discount to the cart or wherever needed
+      }
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      alert(error.response?.data?.error || 'Failed to apply coupon.');
+    }
+  };
   useEffect(() => {
     const fetchStudentDetailsAndData = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user'));
-      if (!storedUser) return;
-
-      try {
-        const response = await fetch(`http://localhost:5000/api/users/${storedUser.id}`);
-        const data = await response.json();
-        setUser({
-          full_name: data.full_name,
-          email: data.email,
-          role: data.role,
-        });
-        setFormData({
-          firstName: data.first_name || '',
-          lastName: data.last_name || '',
-          email: data.email || '',
-          password: '',
-          confirmPassword: '',
-        });
-
-        // Fetch wishlist data
-        setWishlistLoading(true);
+      if (!storedUser || !storedUser.id) return;
+  
+      setUser({
+        full_name: storedUser.full_name || `${storedUser.firstName} ${storedUser.lastName || ''}`,
+        email: storedUser.email || '',
+        role: storedUser.role || '',
+        id: storedUser.id || '',
+      });
+      setFormData({
+        firstName: storedUser.firstName || '',
+        lastName: storedUser.lastName || '',
+        email: storedUser.email || '',
+        password: '',
+        confirmPassword: '',
+      });
+  
+        // Fetch student coupons
         try {
-          const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
-          const formattedWishlist = wishlistResponse.data.map(item => ({
-            ...item,
-            price: typeof item.price === 'string' ? parseFloat(item.price) : item.price
-          }));
-          setWishlist(formattedWishlist);
-          setWishlistError(null);
+          const pointsResponse = await axios.get(`http://localhost:5000/api/student-school-points/${storedUser.id}`);
+          setRewardPoints(pointsResponse.data.reward_points || 0);
         } catch (error) {
-          console.error('Error fetching wishlist:', error);
-          setWishlistError('Failed to load wishlist. Please try again later.');
-        } finally {
-          setWishlistLoading(false);
+          console.error("Error fetching school reward points:", error);
+          setRewardPoints(0); // Fallback to 0 if the request fails
         }
+    setWishlistLoading(true);
+      try {
+        const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
+        const formattedWishlist = wishlistResponse.data.map((item) => ({
+          ...item,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+        }));
+        setWishlist(formattedWishlist);
+        setWishlistError(null);
+      } catch (error) {
+        console.error('Error fetching wishlist:', error);
+        setWishlistError('Failed to load wishlist. Please try again later.');
+      } finally {
+        setWishlistLoading(false);
+      }
 
-        // Fetch orders (existing logic)
+      // Fetch orders
+      setOrdersLoading(true);
+      try {
         const ordersResponse = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
         const ordersData = await ordersResponse.json();
         setOrders(ordersData);
-      } catch (err) {
-        console.error("Error fetching student details or data:", err);
+        setOrdersError(null);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setOrdersError('Failed to load orders. Please try again later.');
+      } finally {
+        setOrdersLoading(false);
+      }
+
+      // Fetch coupons
+      setCouponsLoading(true);
+      try {
+        const couponsResponse = await axios.get(`http://localhost:5000/api/coupons/user/${storedUser.id}`);
+        setCoupons(couponsResponse.data);
+        setCouponsError(null);
+      } catch (error) {
+        console.error('Error fetching coupons:', error);
+        setCouponsError('Failed to load coupons. Please try again later.');
+      } finally {
+        setCouponsLoading(false);
       }
     };
-
+  
     fetchStudentDetailsAndData();
   }, []);
 
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+  
+        console.log("Stored User Data:", storedUser); // 🔍 Check full user data
+  
+        if (storedUser) {
+          setUser({
+            full_name: storedUser.full_name || '',
+            email: storedUser.email || '',
+            role: storedUser.role || '',
+            id: storedUser.id || '' // Store userId
+          });
+        }
+        console.log("Fetching coupons for userId:", storedUser.id); // ✅ Debug log
+  
+        const response = await axios.get(`http://localhost:5000/api/coupons/user/${storedUser.id}`);
+  
+        console.log("API Response:", response.data); // ✅ Debug log
+  
+        setCoupons(response.data);
+      } catch (error) {
+        console.error("Error fetching coupons:", error);
+        setCouponsError("Failed to load coupons. Please try again later.");
+      } finally {
+        setCouponsLoading(false);
+      }
+    };
+  
+    fetchCoupons();
+  }, []);
+  
+  
+  
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -131,6 +220,13 @@ const StudentProfile = () => {
           full_name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
         });
+        localStorage.setItem('user', JSON.stringify({
+          ...storedUser,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+        }));
       } else {
         alert('Failed to update profile.');
       }
@@ -216,24 +312,104 @@ const StudentProfile = () => {
             <button className="btn-primary"><Zap size={18} /> Add New Address</button>
           </div>
         );
-      case 'coupons':
+        case 'coupons':
+      return (
+        <div className="content-area">
+          <h2><Ticket className="icon" /> My Student Coupons</h2>
+          {couponsLoading ? (
+            <p>Loading coupons...</p>
+          ) : couponsError ? (
+            <p>{couponsError}</p>
+          ) : (
+            <div className="coupon-list">
+              {coupons.length === 0 ? (
+                <p>No student coupons available</p>
+              ) : (
+                coupons.map((coupon, index) => (
+                  <div key={index} className="coupon-item">
+                    <h3>{coupon.code}</h3>
+                    <p className="discount">{coupon.discount_percentage}% off</p>
+                    <p className="expiry">
+                      Valid: {new Date(coupon.valid_from).toLocaleDateString()} -{' '}
+                      {new Date(coupon.valid_until).toLocaleDateString()}
+                    </p>
+                    <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleApplyCoupon(coupon.code)}
+                    >
+                      Apply Coupon
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      );
+
+        
+      case 'My order':
         return (
           <div className="content-area">
-            <h2><Ticket className="icon" /> My Coupons</h2>
-            <div className="coupon-list">
-              {[
-                { code: 'SUMMER21', discount: '20% off', expiry: '2023-08-31', color: 'coupon-blue' },
-                { code: 'FREESHIP', discount: 'Free Shipping', expiry: '2023-07-15', color: 'coupon-green' },
-                { code: 'SAVE10', discount: '₹10 off ₹50+', expiry: '2023-09-30', color: 'coupon-orange' },
-              ].map((coupon, index) => (
-                <div key={index} className={`coupon-item ${coupon.color}`}>
-                  <h3>{coupon.code}</h3>
-                  <p className="discount">{coupon.discount}</p>
-                  <p className="expiry">Expires: {coupon.expiry}</p>
-                  <button className="btn-secondary">Use Coupon</button>
-                </div>
-              ))}
-            </div>
+            <h2><ShoppingBag className="icon" /> My Orders</h2>
+            {ordersLoading ? (
+              <p>Loading orders...</p>
+            ) : ordersError ? (
+              <p>{ordersError}</p>
+            ) : (
+              <div className="orders-list">
+                {orders.length === 0 ? (
+                  <p>No orders found.</p>
+                ) : (
+                  orders.map((order, index) => (
+                    <div key={index} className="order-card">
+                      <div className="order-header">
+                        <div className="order-meta">
+                          <span className="order-id">Order #: {order.id}</span>
+                          <span className="order-date">{new Date(order.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="order-items">
+                        {Array.isArray(order.items) ? (
+                          order.items.map((item, itemIndex) => (
+                            <div key={itemIndex} className="order-item">
+                              <img src={item.image || '/placeholder.jpg'} alt={item.name} className="item-image" />
+                              <div className="item-details">
+                                <h4>{item.name}</h4>
+                                <div className="item-meta">
+                                  <span>Quantity: {item.quantity}</span>
+                                  <span>Price: ₹{item.price}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          JSON.parse(order.items).map((item, itemIndex) => (
+                            <div key={itemIndex} className="order-item">
+                              <img src={item.image || '/placeholder.jpg'} alt={item.name} className="item-image" />
+                              <div className="item-details">
+                                <h4>{item.name}</h4>
+                                <div className="item-meta">
+                                  <span>Quantity: {item.quantity}</span>
+                                  <span>Price: ₹{item.price}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="order-footer">
+                        <div className="order-total">
+                          <span>Total:</span>
+                          <span className="total-amount">₹{order.total}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         );
       case 'settings':
@@ -295,7 +471,6 @@ const StudentProfile = () => {
             </form>
           </div>
         );
-      case 'My order':
         return (
           <div className="content-area">
             <h2><ShoppingBag className="icon" /> My Orders</h2>
@@ -409,6 +584,7 @@ const StudentProfile = () => {
             <h1>Student Dashboard</h1>
             <div className="user-details">
               <span className="user-name">{user.full_name}</span>
+              <span className="user-points">School Points: {rewardPoints} pts</span>
             </div>
           </div>
         )}

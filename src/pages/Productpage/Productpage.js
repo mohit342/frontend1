@@ -15,11 +15,10 @@ const Productpage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract subSubcategoryId from URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const subSubcategoryId = queryParams.get("subSubcategoryId");
+  const subcategoryId = queryParams.get("subcategoryId");
 
-  // Fetch products from backend
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -28,7 +27,6 @@ const Productpage = () => {
     try {
       const response = await fetch("http://localhost:5000/api/products");
       const data = await response.json();
-      console.log("Fetched products:", data);
       if (data.success) {
         setProducts(data.data);
       }
@@ -37,12 +35,10 @@ const Productpage = () => {
     }
   };
 
-  // Navigate to Product Detail Page using slug
   const handleNavigate = (slug) => {
     navigate(`/product/${slug}`);
   };
 
-  // Add to Favorites/Wishlist
   const toggleFavorite = (productId) => {
     setFavorites((prev) => {
       const newFavorites = new Set(prev);
@@ -55,41 +51,59 @@ const Productpage = () => {
     });
   };
 
-  // Filter Products based on Search, Category, and Sub-Subcategory ID
+  const handleAddToCart = async (product) => {
+    try {
+      const cartProduct = {
+        id: product.id,
+        name: product.name,
+        price: Number(product.price),
+        quantity: 1,
+        images: product.images ? product.images.split(",")[0] : "/placeholder.jpg",
+      };
+      const success = await addToCart(cartProduct);
+      if (success) {
+        alert("Product added to cart successfully!");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Failed to add product to cart");
+    }
+  };
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      !selectedCategory || product.category === selectedCategory;
+    const matchesCategory = !selectedCategory || product.category === selectedCategory;
 
-    // Handle sub-subcategory filtering with NULL check
     let matchesSubSubcategory = true;
     if (subSubcategoryId) {
-      const subSubIdFromUrl = parseInt(subSubcategoryId, 10); // Ensure base 10 parsing
+      const subSubIdFromUrl = parseInt(subSubcategoryId, 10);
       const productSubSubId =
         product.sub_subcategory_id !== undefined && product.sub_subcategory_id !== null
           ? Number(product.sub_subcategory_id)
           : null;
-
       matchesSubSubcategory = productSubSubId === subSubIdFromUrl;
-
-      // Debug filtering
-      console.log(
-        `Product: ${product.name}, sub_subcategory_id: ${product.sub_subcategory_id}, subSubIdFromUrl: ${subSubIdFromUrl}, matchesSubSubcategory: ${matchesSubSubcategory}`
-      );
     }
 
-    return matchesSearch && matchesCategory && matchesSubSubcategory;
+    let matchesSubcategory = true;
+    if (subcategoryId) {
+      const subIdFromUrl = parseInt(subcategoryId, 10);
+      const productSubId =
+        product.subcategory_id !== undefined && product.subcategory_id !== null
+          ? Number(product.subcategory_id)
+          : null;
+      matchesSubcategory = productSubId === subIdFromUrl;
+    }
+
+    return matchesSearch && matchesCategory && matchesSubSubcategory && matchesSubcategory;
   });
 
-  // Dynamic Categories
   const categories = [...new Set(products.map((p) => p.category))];
 
   return (
     <div className="app-container1">
       <Header setSearchTerm={setSearchTerm} />
-
       <main className="main-content1">
         <div className="categories-container1">
           <button
@@ -109,7 +123,6 @@ const Productpage = () => {
           ))}
         </div>
 
-        {/* Product Listing */}
         <div className="products-grid1">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
@@ -157,13 +170,7 @@ const Productpage = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart({
-                          ...product,
-                          price: Number(product.price),
-                          images: product.images
-                            ? product.images.split(",")[0]
-                            : "/placeholder.jpg",
-                        });
+                        handleAddToCart(product);
                       }}
                       className="add-to-cart-button1"
                     >
@@ -174,7 +181,7 @@ const Productpage = () => {
               </div>
             ))
           ) : (
-            <div>No products found for this sub-subcategory.</div>
+            <div>No products found for this category or subcategory.</div>
           )}
         </div>
       </main>

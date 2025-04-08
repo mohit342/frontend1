@@ -28,7 +28,8 @@ import support from "../../assets/support.png";
 import { Link } from "react-router-dom";
 import { SearchContext } from "../../context/SearchContext"; // Import SearchContext
 
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 // Import Swiper styles
 import "swiper/css";
@@ -49,6 +50,18 @@ import HotDeal from "../../components/HotDeal/HotDeal";
 import Clients from "../../components/Clients/Clients";
 function Home() {
   // const { searchTerm } = useContext(SearchContext);
+
+
+
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const response = await axios.get('http://localhost:5000/api/categories1');
+      setCategories(response.data);
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div>
@@ -101,7 +114,7 @@ function Home() {
           <img src={poster} alt="" />
           <div className="title2">
             <h1>Mittsure Empowering Schools For an Enriching Experience</h1>
-            <Link to="/enquiryform"><button>Let's Discuss</button></Link>
+            <Link to="/enquiryform"><button style={{ cursor: "pointer" }}>Let's Discuss</button></Link>
           </div>
         </div>
       </div>
@@ -111,54 +124,12 @@ function Home() {
             <h1>Featured Categories</h1>
           </div>
           <div className="card-conatiner">
-            <div className="featured-card">
-              <img src={headphone} alt="headphone" />
-              <p>Headphone</p>
-            </div>
-            <div className="featured-card">
-              <img src={Furniture} alt="Furniture" />
-              <p>Furniture</p>
-            </div>
-            <div className="featured-card">
-              <img src={Desks} alt="Desks" />
-              <p>Desks</p>
-            </div>
-            <div className="featured-card">
-              <img src={SolarPanel} alt="Solar Panel" />
-              <p>Solar Panel</p>
-            </div>
-            <div className="featured-card">
-              <img src={Sports} alt="Sports" />
-              <p>Sports</p>
-            </div>
-            <div className="featured-card">
-              <img src={Tablets} alt="Tablets" />
-              <p>Tablets</p>
-            </div>
-            <div className="featured-card">
-              <img src={Supplies} alt="headphone" />
-              <p>School & office Supplies</p>
-            </div>
-            <div className="featured-card">
-              <img src={Paper} alt="Paper" />
-              <p>Paper</p>
-            </div>
-            <div className="featured-card">
-              <img src={Pencils} alt="Pencils" />
-              <p>Pencils</p>
-            </div>
-            <div className="featured-card">
-              <img src={Art} alt="Art Supplies" />
-              <p>Art Supplies</p>
-            </div>
-            <div className="featured-card">
-              <img src={Paint} alt="Paint" />
-              <p>Paint</p>
-            </div>
-            <div className="featured-card">
-              <img src={Computer} alt="Computer" />
-              <p>Computer</p>
-            </div>
+            {categories.map(category => (
+              <div key={category.id} className="featured-card">
+                <img src={`http://localhost:5000/${category.image_path}`} alt={category.name} />
+                <p>{category.name}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -185,6 +156,9 @@ function Home() {
             products and services for pre-primary, primary, secondary, higher
             secondary education, and school infrastructure.
           </p>
+          <div className="title4">
+            <Link to={"https://www.mittsure.com"} target="_blank"><button style={{ cursor: "pointer" }}>About us</button></Link>
+          </div>
         </div>
       </div>
       <div className="detail">

@@ -21,7 +21,9 @@ const SignupForm = () => {
     city: '',
     state: '',
     address: '',
-    employeeId: ''
+    employeeId: '',
+    schoolId: '',
+    schoolName: ''
   });
 
   const [seEmployeeIds, setSeEmployeeIds] = useState([]);
@@ -271,18 +273,18 @@ const SignupForm = () => {
 
         {/* Conditional Fields */}
         {formData.userType === 'student' && (
-          <div>
-            <label>School Name</label>
-            <select name="schoolName" value={formData.schoolName} onChange={handleChange}>
-              <option value="">Select School</option>
-              {schoolNames.map((school, index) => (
-                <option key={index} value={school.school_name}>
-                  {school.school_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+  <div>
+    <label>School Name</label>
+    <select name="schoolId" value={formData.schoolId} onChange={handleChange} required>
+      <option value="">Select School</option>
+      {schoolNames.map((school) => (
+        <option key={school.id} value={school.id}>
+          {school.school_name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
         {formData.userType === 'se' && (
           <div>
             <label>Enter SE Employee ID</label>

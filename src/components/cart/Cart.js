@@ -1,10 +1,9 @@
-
-import { React, createContext, useContext, useState, useEffect } from 'react';
-import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import React, { useEffect } from "react";
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import "./Cart.css";
-import Header from '../header/Header';
-import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext'; // Import the cart context
+import Header from "../header/Header";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 import axios from "axios";
 
 const Cart = () => {
@@ -12,25 +11,25 @@ const Cart = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
   const sessionCartKey = "guest_cart";
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 0), 0);
-  const taxRate = 0.10; // Assuming 10% tax
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax;
-  const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
-
 
   useEffect(() => {
-    if (!user) {
-      const guestCart = JSON.parse(sessionStorage.getItem(sessionCartKey)) || [];
-      setCartItems(guestCart);
-    }
+    const fetchUserCart = async () => {
+      if (user) {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/cart/${user.id}`);
+          if (response.data.data?.items) {
+            setCartItems(response.data.data.items);
+          }
+        } catch (error) {
+          console.error("Error fetching user cart:", error);
+        }
+      } else {
+        const guestCart = JSON.parse(sessionStorage.getItem(sessionCartKey)) || [];
+        setCartItems(guestCart);
+      }
+    };
+    fetchUserCart();
   }, [user, setCartItems]);
-  useEffect(() => {
-    if (!user) {
-      sessionStorage.removeItem(sessionCartKey); // Clear cart for guests on refresh
-      setCartItems([]);
-    }
-  }, []);
 
   useEffect(() => {
     const mergeGuestCart = async () => {
@@ -39,15 +38,15 @@ const Cart = () => {
         if (guestCart.length > 0) {
           try {
             for (const item of guestCart) {
-              await axios.post("/api/cart/add", {
+              await axios.post("http://localhost:5000/api/cart/add", {
                 userId: user.id,
                 productId: item.id,
-                quantity: item.quantity
+                quantity: item.quantity,
               });
             }
             sessionStorage.removeItem(sessionCartKey);
-            const response = await axios.get(`/api/cart/${user.id}`);
-            setCartItems(response.data.items);
+            const response = await axios.get(`http://localhost:5000/api/cart/${user.id}`);
+            setCartItems(response.data.data.items);
           } catch (error) {
             console.error("Error merging guest cart:", error);
           }
@@ -57,54 +56,13 @@ const Cart = () => {
     mergeGuestCart();
   }, [user, setCartItems]);
 
-  useEffect(() => {
-    const fetchUserCart = async () => {
-      if (user) {
-        try {
-          const response = await axios.get(`/api/cart/${user.id}`);
-          
-          if (response.data.items) {
-            console.log("Cart data:", response.data.items); // ✅ Debugging log
-            setCartItems(response.data.items);
-          } else {
-            console.warn("Cart API returned unexpected response:", response.data);
-          }
-        } catch (error) {
-          console.error("Error fetching user cart:", error.response?.data || error.message);
-        }
-      }
-    };
-  
-    fetchUserCart();
-  }, [user, setCartItems]);
-  
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price || 0) * (item.quantity || 0), 0);
+  const taxRate = 0.10;
+  const tax = subtotal * taxRate;
+  const total = subtotal + tax;
+  const { itemCount } = getCartTotals();
 
-
-
-
-  const addToCart = async (product) => {
-    const newItem = { ...product, quantity: 1 };
-
-    if (user) {
-      try {
-        await axios.post("/api/cart/add", { userId: user.id, productId: product.id, quantity: 1 });
-        const response = await axios.get(`/api/cart/${user.id}`);
-        setCartItems(response.data.items);
-      } catch (error) {
-        console.error("Error adding to cart:", error);
-      }
-    } else {
-      // Guest user: Store cart in sessionStorage
-      const guestCart = JSON.parse(sessionStorage.getItem(sessionCartKey)) || [];
-      guestCart.push(newItem);
-      sessionStorage.setItem(sessionCartKey, JSON.stringify(guestCart));
-      setCartItems(guestCart);
-    }
-  };
-  // Function to proceed to checkout
   const proceedToCheckout = () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-
     if (!user) {
       alert("You must be logged in to proceed to checkout.");
       navigate("/user/login");
@@ -118,7 +76,9 @@ const Cart = () => {
       <Header />
       <div className="cart-container">
         <div className="cart-header">
-          <h1><ShoppingCart className="cart-icon" /> Shopping Cart</h1>
+          <h1>
+            <ShoppingCart className="cart-icon" /> Shopping Cart
+          </h1>
           <span>{itemCount} items</span>
         </div>
 
@@ -130,21 +90,23 @@ const Cart = () => {
               <div className="empty-cart">
                 <h3>Your cart is empty</h3>
                 <p>Add some products to your cart to see them here.</p>
-                <Link to="/" className="continue-shopping">Continue Shopping</Link>
+                <Link to="/" className="continue-shopping">
+                  Continue Shopping
+                </Link>
               </div>
             ) : (
-              cartItems.map(item => (
+              cartItems.map((item) => (
                 <div key={item.id} className="cart-item">
                   <img
-                    src={item.images ? `http://localhost:5000/${item.images}` : "/placeholder.jpg"}
+                    src={
+                      Array.isArray(item.images)
+                        ? `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`
+                        : `http://localhost:5000/${item.images?.replace(/\\/g, "/")}` || "/placeholder.jpg"
+                    }
                     alt={item.name}
                     className="item-image"
-                    onError={(e) => e.target.src = "/placeholder.jpg"} // ✅ Handle broken images
+                    onError={(e) => (e.target.src = "/placeholder.jpg")}
                   />
-
-
-
-
                   <div className="item-details">
                     <h3>{item.name}</h3>
                     <p className="item-price">₹{(Number(item.price) || 0).toFixed(2)}</p>
@@ -160,10 +122,7 @@ const Cart = () => {
                   </div>
                   <div className="item-total">
                     <p>₹{((Number(item.price) || 0) * (item.quantity || 0)).toFixed(2)}</p>
-                    <button
-                      className="remove-button"
-                      onClick={() => removeItem(item.id)}
-                    >
+                    <button className="remove-button" onClick={() => removeItem(item.id)}>
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -177,15 +136,15 @@ const Cart = () => {
               <h2>Order Summary</h2>
               <div className="summary-row">
                 <span>Subtotal</span>
-                <span>₹{subtotal.toFixed(2)}</span> {/* Safe handling */}
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="summary-row">
                 <span>Tax (10%)</span>
-                <span>₹{tax.toFixed(2)}</span> {/* Safe handling */}
+                <span>₹{tax.toFixed(2)}</span>
               </div>
               <div className="summary-row total">
                 <span>Total</span>
-                <span>₹{total.toFixed(2)}</span> {/* Safe handling */}
+                <span>₹{total.toFixed(2)}</span>
               </div>
               <button className="checkout-button" onClick={proceedToCheckout}>
                 Proceed to Checkout

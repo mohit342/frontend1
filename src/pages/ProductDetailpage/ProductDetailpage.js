@@ -4,6 +4,7 @@ import axios from "axios";
 import "./Productdetail.css";
 import Header from "../../components/header/Header";
 import Footer from "../../components/Footer/Footer";
+import { useCart } from "../../components/context/CartContext";
 
 function ProductDetailpage() {
   const { slug } = useParams();
@@ -15,26 +16,49 @@ function ProductDetailpage() {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isZoomActive, setIsZoomActive] = useState(false);
 
+  const { addToCart } = useCart();
+
   const imageRef = useRef(null);
   const zoomRef = useRef(null);
 
   const addToWishlist = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
-      alert('Please login to add items to wishlist');
-      navigate('/user/login');
+      alert("Please login to add items to wishlist");
+      navigate("/user/login");
       return;
     }
 
     try {
-      await axios.post('http://localhost:5000/api/wishlist', {
+      await axios.post("http://localhost:5000/api/wishlist", {
         userId: user.id,
-        productId: product.id
+        productId: product.id,
       });
-      alert('Product added to wishlist successfully!');
+      alert("Product added to wishlist successfully!");
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      alert('Failed to add to wishlist');
+      console.error("Error adding to wishlist:", error);
+      alert("Failed to add to wishlist");
+    }
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      const cartProduct = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        images: product.images,
+      };
+
+      const success = await addToCart(cartProduct);
+      if (success) {
+        alert("Product added to cart successfully!");
+        setQuantity(1); // Reset quantity after successful addition
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Failed to add product to cart");
     }
   };
 
@@ -47,35 +71,23 @@ function ProductDetailpage() {
     const fetchProduct = async () => {
       try {
         const decodedSlug = decodeURIComponent(slug);
-        console.log('Fetching product with slug:', decodedSlug);
-
         const response = await axios.get(
           `http://localhost:5000/api/products/slug/${encodeURIComponent(decodedSlug)}`,
           {
             timeout: 8000,
-            validateStatus: (status) => status === 200 || status === 404
+            validateStatus: (status) => status === 200 || status === 404,
           }
         );
 
         if (response.status === 404 || !response.data?.data) {
-          console.warn('Product not found for slug:', decodedSlug);
           navigate("/not-found", { replace: true });
           return;
         }
 
         const productData = response.data.data;
-        console.log('Received product data:', productData);
-
-        if (!productData.slug) {
-          console.error('Product missing slug:', productData);
-          navigate("/not-found", { replace: true });
-          return;
-        }
-
         setProduct(productData);
         setSelectedImageIndex(0);
       } catch (error) {
-        console.error("Full fetch error:", error);
         navigate("/not-found", { replace: true });
       } finally {
         setLoading(false);
@@ -94,14 +106,14 @@ function ProductDetailpage() {
 
     setZoomPosition({
       x: (x / rect.width) * 100,
-      y: (y / rect.height) * 100
+      y: (y / rect.height) * 100,
     });
     setIsZoomActive(true);
   };
 
   const handleMouseLeave = () => setIsZoomActive(false);
-  const increaseQuantity = () => setQuantity(prev => prev + 1);
-  const decreaseQuantity = () => quantity > 1 && setQuantity(prev => prev - 1);
+  const increaseQuantity = () => setQuantity((prev) => prev + 1);
+  const decreaseQuantity = () => quantity > 1 && setQuantity((prev) => prev - 1);
 
   if (loading) return <div className="loading100">Loading...</div>;
   if (!product) return <div className="error100">Product not found</div>;
@@ -125,10 +137,7 @@ function ProductDetailpage() {
               src={imageUrl}
               alt={product.name}
               className="main-image100"
-              onError={(e) => {
-                e.target.src = "/placeholder.jpg";
-                console.error("Image failed to load:", imageUrl);
-              }}
+              onError={(e) => (e.target.src = "/placeholder.jpg")}
             />
             <div
               className={`lens100 ${isZoomActive ? "visible" : "hidden"}`}
@@ -150,29 +159,44 @@ function ProductDetailpage() {
           />
 
           <div className="thumbnail-container100">
-            {Array.isArray(product.images) && product.images.slice(0, 5).map((img, index) => (
-              <img
-                key={index}
-                src={`http://localhost:5000/${img.replace(/\\/g, "/")}`}
-                alt={`Thumbnail ${index + 1}`}
-                className={`thumbnail100 ${selectedImageIndex === index ? "active" : ""}`}
-                onClick={() => setSelectedImageIndex(index)}
-                onError={(e) => e.target.src = '/placeholder.jpg'}
-              />
-            ))}
+            {Array.isArray(product.images) &&
+              product.images.slice(0, 5).map((img, index) => (
+                <img
+                  key={index}
+                  src={`http://localhost:5000/${img.replace(/\\/g, "/")}`}
+                  alt={`Thumbnail ${index + 1}`}
+                  className={`thumbnail100 ${selectedImageIndex === index ? "active" : ""}`}
+                  onClick={() => setSelectedImageIndex(index)}
+                  onError={(e) => (e.target.src = "/placeholder.jpg")}
+                />
+              ))}
           </div>
         </div>
 
         <div className="product-info100">
           <h1 className="product-name100">{product.name}</h1>
-          <p className="product-price100">
+          {/* <p className="product-price100">
             <b>Price:</b> Rs.{product.price.toFixed(2)}
             {product.discount_percentage > 0 && (
-              <span className="discount-tag100">
-                {/* ({product.discount_percentage}% OFF) */}
-              </span>
+              <span className="discount-tag100"></span>
+
             )}
-          </p>
+          </p> */}
+          <div className="price-container1">
+  <span className="current-price1">₹{product.price.toFixed(2)}</span>
+  {product.discount_percentage > 0 && (
+    <>
+      <span className="original-price1">
+        <del>₹{(product.price / (1 - product.discount_percentage / 100)).toFixed(2)}</del>
+      </span>
+      <div className="discount-badge1">
+        ({product.discount_percentage}% OFF)
+      </div>
+    </>
+  )}
+  <p className="tax-info1">inclusive of all taxes</p>
+</div>
+
           <p className="product-short-description100">{product.short_description || "N/A"}</p>
 
           <div className="quantity-container100">
@@ -183,9 +207,12 @@ function ProductDetailpage() {
               <button onClick={increaseQuantity} className="qty-btn100">+</button>
             </div>
           </div>
-          <button className="bbuy-now100" onClick={addToWishlist}>Add to Wishlist</button>
-          <button className="add-to-cart100">Add to Cart</button>
-          {/* <button className="buy-now100">Buy It Now</button> */}
+          <button className="bbuy-now100" onClick={addToWishlist}>
+            Add to Wishlist
+          </button>
+          <button className="add-to-cart100" onClick={handleAddToCart}>
+            Add to Cart
+          </button>
         </div>
 
         <div className="product-description100">

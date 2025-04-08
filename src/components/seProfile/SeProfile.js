@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import "./SeProfile.css";
-import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag, Star, Zap } from 'lucide-react';
+import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag } from 'lucide-react';
 import men from "../../assets/men.jpg";
 import supple from "../../assets/supplies.jpg";
-import { Link, useLocation } from "react-router-dom"; // Added useLocation
+import { Link, useLocation } from "react-router-dom";
 import { BiSolidSchool } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
 import axios from 'axios';
 
 const SeProfile = () => {
-  // Handle tab from URL query parameter
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tabFromUrl = queryParams.get('tab');
-  
-  // Initialize activeTab with tabFromUrl or default to 'Total School'
+
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'Total School');
   const [user, setUser] = useState({
     full_name: '',
@@ -32,6 +30,12 @@ const SeProfile = () => {
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistError, setWishlistError] = useState(null);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
 
   // Sync activeTab with URL changes
   useEffect(() => {
@@ -89,6 +93,16 @@ const SeProfile = () => {
 
     fetchUserDataAndData();
   }, []);
+
+  // Sync formData with user data when user changes
+  useEffect(() => {
+    setFormData({
+      fullName: user.full_name || '',
+      email: user.email || '',
+      password: '',
+      confirmPassword: '',
+    });
+  }, [user]);
 
   // Fetch schools with coupons
   const fetchSchools = async () => {
@@ -151,6 +165,47 @@ const SeProfile = () => {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .substring(0, 200);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${storedUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password || undefined,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Profile updated successfully!');
+        const updatedUser = await response.json();
+        setUser({
+          ...user,
+          full_name: formData.fullName,
+          email: formData.email,
+        });
+        localStorage.setItem('user', JSON.stringify({
+          ...storedUser,
+          fullName: formData.fullName,
+          email: formData.email
+        }));
+      } else {
+        alert('Failed to update profile.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   // Remove item from wishlist
@@ -418,22 +473,46 @@ const SeProfile = () => {
         return (
           <div className="content-area">
             <h2><Settings className="icon" /> Account Settings</h2>
-            <form className="settings-form">
+            <form className="settings-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" defaultValue="Sourabh" />
+                <label htmlFor="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
-                <input type="email" id="email" name="email" defaultValue="Sourabh@example.com" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="password">New Password</label>
-                <input type="password" id="password" name="password" />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm New Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                />
               </div>
               <button type="submit" className="btn-primary">Save Changes</button>
             </form>
@@ -544,13 +623,13 @@ const SeProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-          <button
+          {/* <button
             className={`nav-button ${activeTab === 'manageNotifications' ? 'active' : ''}`}
             onClick={() => setActiveTab('manageNotifications')}
           >
             <Bell size={24} />
             <span>Manage Notifications</span>
-          </button>
+          </button> */}
         </nav>
         <main className="main-content">
           {renderContent()}

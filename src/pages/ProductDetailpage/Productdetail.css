@@ -262,3 +262,33 @@
   color: #6b7280;
   font-size: 1rem;
 }
+.price-container1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.current-price1 {
+  font-size: 24px;
+  font-weight: bold;
+  color: #000;
+}
+
+.original-price1 {
+  font-size: 18px;
+  color: #888;
+}
+
+.discount-badge1 {
+  font-size: 16px;
+  color: #ff5722; /* Orange color for discount */
+  margin-left: 10px;
+}
+
+.tax-info1 {
+  font-size: 14px;
+  color: #26a69a; /* Teal color to match the image */
+  margin-top: 5px;
+  width: 100%;
+}

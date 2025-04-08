@@ -7,17 +7,17 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
-  const { cartItems, setCartItems } = useCart(); // Ensure setCartItems is destructured
-  const { user } = useAuth();  // Changed from currentUser to user
+  const { cartItems, setCartItems } = useCart();
+  const { user } = useAuth();
   const [coupon, setCoupon] = useState("");
-  const user1 = JSON.parse(localStorage.getItem("user"));
-  const navigate = useNavigate();
-
+  const [availableCoupons, setAvailableCoupons] = useState([]);
   const [couponApplied, setCouponApplied] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState(0);
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,83 +29,121 @@ const Checkout = () => {
   });
   const [errors, setErrors] = useState({});
 
-  // Prefill form with user data if available
   useEffect(() => {
-    if (user) {  // Changed from currentUser to user
-      setFormData(prevData => ({
+    if (user) {
+      setFormData((prevData) => ({
         ...prevData,
-        name: user.firstName ? `${user.firstName} ${user.lastName || ''}` : prevData.name,  // Changed from currentUser to user
-        email: user.email || prevData.email,  // Changed from currentUser to user
-        phone: user.mobile || prevData.phone,  // Changed from currentUser to user
+        name: user.firstName ? `${user.firstName} ${user.lastName || ""}` : prevData.name,
+        email: user.email || prevData.email,
+        phone: user.mobile || prevData.phone,
       }));
-    }
-  }, [user]);  // Changed from currentUser to user
 
-  // Calculate totals
+      const fetchCoupons = async () => {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/coupons/user/${user.id}`);
+          const enrichedCoupons = await Promise.all(
+            response.data.map(async (coupon) => {
+              try {
+                const validationResponse = await axios.post("http://localhost:5000/api/coupons/validate", {
+                  code: coupon.code,
+                  userId: user.id,
+                  userType: user.role,
+                });
+                return {
+                  ...coupon,
+                  school_name: validationResponse.data.school_name || 'Unknown School',
+                };
+              } catch (error) {
+                return { ...coupon, school_name: 'Unknown School' };
+              }
+            })
+          );
+          setAvailableCoupons(enrichedCoupons);
+        } catch (error) {
+          console.error("Error fetching coupons:", error);
+        }
+      };
+
+      fetchCoupons();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCart = async () => {
+        if (user) {
+            try {
+                const response = await axios.get(`http://localhost:5000/api/cart/${user.id}`);
+                setCartItems(response.data.data.items || []);
+            } catch (error) {
+                console.error('Error fetching cart on checkout:', error);
+                setCartItems([]);
+            }
+        }
+    };
+    fetchCart();
+}, [user, setCartItems]);
+
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
   const shipping = cartItems.length > 0 ? 40 : 0;
-  const tax = subtotal * 0.1; // 10% GST
+  const tax = subtotal * 0.1;
   const couponDiscount = (subtotal * additionalDiscount) / 100;
   const total = subtotal + shipping + tax - couponDiscount;
 
   const applyCoupon = async () => {
-    console.log("User from AuthContext:", user); 
     setCouponError("");
     setCouponSuccess("");
 
     if (!coupon.trim()) {
-        setCouponError("Please enter a coupon code");
-        return;
+      setCouponError("Please select or enter a coupon code");
+      return;
     }
 
     if (!user) {
-        setCouponError("You must be logged in to apply a coupon");
-        return;
+      setCouponError("You must be logged in to apply a coupon");
+      return;
     }
 
     setLoading(true);
 
     try {
-        console.log("Sending request with payload:", {
-            code: coupon,
-            userId: user.id,
-            userType: user.role
-        });
+      const response = await axios.post("http://localhost:5000/api/coupons/validate", {
+        code: coupon,
+        userId: user.id,
+        userType: user.role,
+      });
 
-        const response = await axios.post("http://localhost:5000/api/coupons/validate", {
-            code: coupon,
-            userId: user.id,
-            userType: user.role
-        });
-
-        console.log("Response received:", response.data);
-
-        setAdditionalDiscount(response.data.discount_percentage);
-        setCouponApplied(true);
-        setCouponSuccess(`Coupon applied! You received ${response.data.discount_percentage}% discount.`);
+      setAdditionalDiscount(response.data.discount_percentage);
+      setCouponApplied(true);
+      setCouponSuccess(`Coupon applied! You received ${response.data.discount_percentage}% discount from ${response.data.school_name}.`);
     } catch (error) {
-        console.error("Coupon validation error:", error.response?.data || error.message);
-        setCouponError(error.response?.data?.error || "Failed to validate coupon");
-        setCouponApplied(false);
-        setAdditionalDiscount(0);
+      console.error("Coupon validation error:", error.response?.data || error.message);
+      setCouponError(error.response?.data?.error || "Failed to validate coupon");
+      setCouponApplied(false);
+      setAdditionalDiscount(0);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
-
+  };
 
   const removeCoupon = () => {
     setCouponApplied(false);
     setAdditionalDiscount(0);
     setCouponSuccess("");
     setCouponError("");
+    setCoupon("");
   };
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
     setErrors({ ...errors, [id]: "" });
+  };
+
+  const handleCouponChange = (e) => {
+    setCoupon(e.target.value);
+    if (couponApplied) {
+      removeCoupon();
+    }
   };
 
   const validateForm = () => {
@@ -133,13 +171,13 @@ const Checkout = () => {
   const handleCheckout = async () => {
     if (!validateForm()) return;
 
-    if (!user) {  // Changed from currentUser to user
+    if (!user) {
       alert("Please log in to complete your purchase");
       return;
     }
 
     const orderData = {
-      userId: user.id,  // Changed from currentUser to user
+      userId: user.id,
       fullName: formData.name,
       email: formData.email,
       address: formData.address,
@@ -149,27 +187,20 @@ const Checkout = () => {
       phone: formData.phone,
       total,
       couponCode: couponApplied ? coupon : null,
+      cartItems,
     };
 
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/orders", {
-        userId: user1?.id || null, // Pass userId or null if guest
-        fullName: formData.name,
-        email: formData.email,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        phone: formData.phone,
-        total,
-        couponCode: couponApplied ? coupon : null,
-        cartItems: cartItems // Pass the entire cart
-      });
-    
-      // alert(response.data.message);
-      // Reset form after successful checkout
+      const response = await axios.post("http://localhost:5000/api/orders", orderData);
+      let message = "Order placed successfully!";
+      if (user.role === 'student' && response.data.pointsAwarded > 0) {
+        message += ` ${response.data.pointsAwarded} points awarded to your school.`;
+      } else if (user.role === 'school' && response.data.sePointsAwarded > 0) {
+        message += ` ${response.data.sePointsAwarded} points awarded to your SE.`;
+      }
+      alert(message);
       navigate("/OrderSuccess");
       setFormData({ name: "", email: "", address: "", city: "", state: "", pincode: "", phone: "" });
       setCoupon("");
@@ -177,8 +208,7 @@ const Checkout = () => {
       setAdditionalDiscount(0);
       setCartItems([]);
       localStorage.removeItem("cartItems");
-      // clearCart();
-    } catch (error) { 
+    } catch (error) {
       alert(error.response?.data?.error || "Failed to process order");
     } finally {
       setLoading(false);
@@ -194,7 +224,9 @@ const Checkout = () => {
             <h2 className="section-title">Shipping Information</h2>
             {Object.entries(formData).map(([key, value]) => (
               <div className="form-group" key={key}>
-                <label htmlFor={key}>{key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1")}</label>
+                <label htmlFor={key}>
+                  {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1")}
+                </label>
                 <input
                   type={key === "email" ? "email" : key === "phone" || key === "pincode" ? "number" : "text"}
                   id={key}
@@ -213,29 +245,34 @@ const Checkout = () => {
             {cartItems.length > 0 ? (
               <>
                 {cartItems.map((item) => (
-                  <div key={item.id} className="summary-item">
+                  <div key={item.id || item.productId} className="summary-item">
                     <div className="product-details">
                       <div>
                         <h3>{item.name}</h3>
                         <p>Quantity: {item.quantity}</p>
                       </div>
                     </div>
-                    <div className="price">₹{(item.price * item.quantity).toFixed(2)}</div>
+                    <div className="price">₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</div>
                   </div>
                 ))}
 
                 <div className="form-group">
                   <label htmlFor="coupon">Coupon Code</label>
                   <div className="coupon-input-container">
-                    <input
-                      type="text"
+                    <select
                       id="coupon"
-                      placeholder="Enter your coupon code"
                       value={coupon}
-                      onChange={(e) => setCoupon(e.target.value)}
+                      onChange={handleCouponChange}
                       disabled={couponApplied || loading}
                       className={couponApplied ? "input-success" : ""}
-                    />
+                    >
+                      <option value="">Select a coupon</option>
+                      {availableCoupons.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} ({c.discount_percentage}% off - {c.school_name})
+                        </option>
+                      ))}
+                    </select>
                     <button
                       onClick={couponApplied ? removeCoupon : applyCoupon}
                       disabled={loading}
@@ -246,7 +283,7 @@ const Checkout = () => {
                   </div>
                   {couponError && <span className="error-message">{couponError}</span>}
                   {couponSuccess && <span className="success-message">{couponSuccess}</span>}
-                  {!user && <p className="info-message">Login required to use coupons</p>}  {/* Changed from currentUser to user */}
+                  {!user && <p className="info-message">Login required to use coupons</p>}
                 </div>
 
                 <div className="total-section">

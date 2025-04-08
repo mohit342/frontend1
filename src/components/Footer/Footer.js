@@ -4,6 +4,7 @@ import { ImFacebook2 } from "react-icons/im";
 import { FaTwitter } from "react-icons/fa6";
 import { FaInstagramSquare } from "react-icons/fa";
 import { FaLinkedin } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -35,7 +36,8 @@ const Footer = () => {
         </div>
         <div className="footerSection3">
          <h3>Share Your Email and Communication Preferences</h3>
-         <button>Stay connected</button>
+         <Link to="/enquiryform"><button>Stay connected</button></Link>
+
          <h3>Follow us</h3>
           <div className="icon">
           <ImFacebook2  fontSize={30}/>
