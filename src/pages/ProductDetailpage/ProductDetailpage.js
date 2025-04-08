@@ -194,7 +194,6 @@ function ProductDetailpage() {
       </div>
     </>
   )}
-  <p className="tax-info1">inclusive of all taxes</p>
 </div>
 
           <p className="product-short-description100">{product.short_description || "N/A"}</p>
