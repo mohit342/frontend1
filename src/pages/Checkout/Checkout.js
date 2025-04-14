@@ -114,7 +114,7 @@ const Checkout = () => {
 
       setAdditionalDiscount(response.data.discount_percentage);
       setCouponApplied(true);
-      setCouponSuccess(`Coupon applied! You received ${response.data.discount_percentage}% discount from ${response.data.school_name}.`);
+      setCouponSuccess(`Coupon applied!`);
     } catch (error) {
       console.error("Coupon validation error:", error.response?.data || error.message);
       setCouponError(error.response?.data?.error || "Failed to validate coupon");
@@ -273,13 +273,15 @@ const Checkout = () => {
                         </option>
                       ))}
                     </select>
+                    <div className="footerSection3">
                     <button
                       onClick={couponApplied ? removeCoupon : applyCoupon}
                       disabled={loading}
-                      className={`coupon-button ${couponApplied ? "remove-coupon" : ""}`}
+                      className={`coupon-button ${couponApplied ? "remove-coupon" : ""}`} 
                     >
                       {loading ? "Processing..." : couponApplied ? "Remove" : "Apply"}
                     </button>
+                    </div>
                   </div>
                   {couponError && <span className="error-message">{couponError}</span>}
                   {couponSuccess && <span className="success-message">{couponSuccess}</span>}

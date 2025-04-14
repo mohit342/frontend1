@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import './DropMenu3.css';
+import { Link } from 'react-router-dom';
 
 const DropMenu3 = () => {
   const [activeMenus, setActiveMenus] = useState([]);
@@ -37,7 +38,7 @@ const DropMenu3 = () => {
           onMouseEnter={() => handleMenuHover('main')}
           onMouseLeave={() => handleMenuLeave('main')}
         >
-          <div 
+          {/* <div 
             className="menu-item submenu-trigger"
             onMouseEnter={() => handleMenuHover('Daily Planner')}
             onMouseLeave={() => handleMenuLeave('Daily Planner')}
@@ -45,17 +46,9 @@ const DropMenu3 = () => {
             <div className="menu-item-content">
               <span>Daily Planner</span>
             </div>
-          </div>
+          </div> */}
 
-          <div 
-            className="menu-item submenu-trigger"
-            onMouseEnter={() => handleMenuHover('Digital Content')}
-            onMouseLeave={() => handleMenuLeave('Digital Content')}
-          >
-            <div className="menu-item-content">
-              <span>Digital Content</span>
-            </div>
-          </div>
+          
 
           <div 
             className="menu-item submenu-trigger"
@@ -64,6 +57,15 @@ const DropMenu3 = () => {
           >
             <div className="menu-item-content">
               <span>Activities</span>
+            </div>
+          </div>
+          <div 
+            className="menu-item submenu-trigger"
+            onMouseEnter={() => handleMenuHover('Question Bank')}
+            onMouseLeave={() => handleMenuLeave('Question Bank')}
+          >
+            <div className="menu-item-content">
+              <span>Question Bank</span>
             </div>
           </div>
 
@@ -83,11 +85,12 @@ const DropMenu3 = () => {
             onMouseLeave={() => handleMenuLeave('Talent Box')}
           >
             <div className="menu-item-content">
-              <span>Talent Box</span>
+              <span>
+            <Link to="https://nice-wiles.103-172-92-24.plesk.page/" target="_blank">Talent Box</Link></span>
             </div>
           </div>
 
-          <div 
+          {/* <div 
             className="menu-item submenu-trigger"
             onMouseEnter={() => handleMenuHover('Teacher Manual')}
             onMouseLeave={() => handleMenuLeave('Teacher Manual')}
@@ -95,17 +98,19 @@ const DropMenu3 = () => {
             <div className="menu-item-content">
               <span>Teacher Manual</span>
             </div>
-          </div>
-
+          </div> */}
           <div 
             className="menu-item submenu-trigger"
-            onMouseEnter={() => handleMenuHover('Question Bank')}
-            onMouseLeave={() => handleMenuLeave('Question Bank')}
+            onMouseEnter={() => handleMenuHover('Digital Content')}
+            onMouseLeave={() => handleMenuLeave('Digital Content')}
           >
             <div className="menu-item-content">
-              <span>Question Bank</span>
+              <span>
+            <Link to="https://nice-wiles.103-172-92-24.plesk.page/" target="_blank">Digital Content</Link></span>
             </div>
           </div>
+
+         
         </div>
       </nav>
     </div>

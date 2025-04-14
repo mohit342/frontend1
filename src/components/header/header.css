@@ -1,7 +1,10 @@
 .home-container {
   width: 100vw;
-  height: 22vh;
-  overflow-x: hidden;
+  height: 25vh;
+  /* overflow-x: hidden; */
+  /* overflow-y: hidden; */
+  position: relative;
+  
 
 }
 #strip {

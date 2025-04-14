@@ -1,67 +1,43 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../../components/header/Header";
 import "./Home.css";
 import { Swiper, SwiperSlide } from "swiper/react";
-import tabs from "../../assets/Tabs.JPG";
-import elct from "../../assets/elct.jpg";
-import outdoor from "../../assets/outdoor.JPG";
-import current from "../../assets/current.jpg";
-import fur from "../../assets/fur.jpg";
-import poster from "../../assets/Poster.jpg";
-import headphone from "../../assets/headphone.png";
-import Furniture from "../../assets/chairimage.png";
-import Desks from "../../assets/desk.png";
-import SolarPanel from "../../assets/solar.png";
-import Sports from "../../assets/sports.png";
-import Tablets from "../../assets/tablets.png";
-import Supplies from "../../assets/scissors.png";
-import Paper from "../../assets/papers.png";
-import Pencils from "../../assets/pencil.png";
-import Art from "../../assets/art.png";
-import Paint from "../../assets/paints.png";
-import Computer from "../../assets/computer.png";
-import kids from "../../assets/kids.jpg";
-import trust from "../../assets/trusted.png"
-import secure from "../../assets/secure.png"
-import customer from "../../assets/customer.png";
-import support from "../../assets/support.png";
-import { Link } from "react-router-dom";
-import { SearchContext } from "../../context/SearchContext"; // Import SearchContext
-
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-// Import Swiper styles
+import { Autoplay, Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import slide1 from "../../assets/1.gif";
-import slide2 from "../../assets/2.gif";
-
-import slide3 from "../../assets/3.gif";
-
-import { Autoplay } from "swiper/modules";
-
-// import required modules
-import { Pagination, Navigation } from "swiper/modules";
 import "swiper/css/navigation";
 import Footer from "../../components/Footer/Footer";
 import TopTranding from "../../components/TopTranding/TopTranding";
 import HotDeal from "../../components/HotDeal/HotDeal";
 import Clients from "../../components/Clients/Clients";
+import { Link, useNavigate } from "react-router-dom"; // Add useNavigate
+import axios from "axios";
+
+// Import your image assets as before
+import poster from "../../assets/Poster.jpg";
+import kids from "../../assets/kids.jpg";
+import trust from "../../assets/trusted.png";
+import secure from "../../assets/secure.png";
+import customer from "../../assets/customer.png";
+import support from "../../assets/support.png";
+import Testimonials from "../../components/Testimonials/Testimonials";
+
 function Home() {
-  // const { searchTerm } = useContext(SearchContext);
-
-
-
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const response = await axios.get('http://localhost:5000/api/categories1');
+      const response = await axios.get("http://localhost:5000/api/categories1");
       setCategories(response.data);
     };
     fetchCategories();
   }, []);
+
+  // Function to handle category click
+  const handleCategoryClick = (subcategoryId) => {
+    navigate(`/product?subcategoryId=${subcategoryId}`);
+  };
 
   return (
     <div>
@@ -70,41 +46,32 @@ function Home() {
         modules={[Navigation, Pagination, Autoplay]}
         autoplay={{ delay: 3000 }}
         slidesPerView={1}
-        pagination={{
-          clickable: true,
-        }}
+        pagination={{ clickable: true }}
         breakpoints={{
-          576: {
-            slidesPerView: 1,
-            spaceBetween: 20,
-          },
-          768: {
-            slidesPerView: 1,
-            spaceBetween: 20,
-          },
-          992: {
-            slidesPerView: 1,
-            spaceBetween: 20,
-          },
-          1200: {
-            slidesPerView: 1,
-            spaceBetween: 50,
-          },
+          576: { slidesPerView: 1, spaceBetween: 20 },
+          768: { slidesPerView: 1, spaceBetween: 20 },
+          992: { slidesPerView: 1, spaceBetween: 20 },
+          1200: { slidesPerView: 1, spaceBetween: 50 },
         }}
         className="mySwiper"
       >
         <SwiperSlide>
-          {/* <img src={slide1} alt="" /> */}
-          <img src="https://mittstore.com/cdn/shop/files/Website_1536x500px_1.jpg?v=1740646953&width=2136" alt="" />
-
+          <img
+            src="https://mittstore.com/cdn/shop/files/Website_1536x500px_1.jpg?v=1740646953&width=2136"
+            alt=""
+          />
         </SwiperSlide>
         <SwiperSlide>
-          {/* <img src={slide2} alt="" /> */}
-          <img src="https://mittstore.com/cdn/shop/files/Website_1536x500px_3.jpg?v=1740646952" alt="" />
+          <img
+            src="https://mittstore.com/cdn/shop/files/Website_1536x500px_3.jpg?v=1740646952"
+            alt=""
+          />
         </SwiperSlide>
         <SwiperSlide>
-          {/* <img src={slide3} alt="" /> */}
-          <img src="https://mittstore.com/cdn/shop/files/Website_1536x500px_2.jpg?v=1740646953" alt="" />
+          <img
+            src="https://mittstore.com/cdn/shop/files/Website_1536x500px_2.jpg?v=1740646953"
+            alt=""
+          />
         </SwiperSlide>
       </Swiper>
       <TopTranding />
@@ -114,20 +81,32 @@ function Home() {
           <img src={poster} alt="" />
           <div className="title2">
             <h1>Mittsure Empowering Schools For an Enriching Experience</h1>
-            <Link to="/enquiryform"><button style={{ cursor: "pointer" }}>Let's Discuss</button></Link>
+            <Link to="/enquiryform">
+              <button style={{ cursor: "pointer" }}>Let's Discuss</button>
+            </Link>
           </div>
         </div>
       </div>
-      <div className="featuredCategories">
-        <div className="featured-container">
-          <div className="title">
+      <div className="featuredCategories141">
+        <div className="featured-container141">
+          <div className="title141">
             <h1>Featured Categories</h1>
           </div>
-          <div className="card-conatiner">
-            {categories.map(category => (
-              <div key={category.id} className="featured-card">
-                <img src={`http://localhost:5000/${category.image_path}`} alt={category.name} />
-                <p>{category.name}</p>
+          <div className="card-container141">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="featured-card141"
+                onClick={() => handleCategoryClick(category.subcategory_id)} // Add click handler
+                style={{ cursor: "pointer" }} // Add cursor pointer for better UX
+              >
+                <div className="card-image">
+                  <img
+                    src={`http://localhost:5000/${category.image_path}`}
+                    alt={category.name}
+                  />
+                </div>
+                {/* <p className="category-name">{category.name}</p> */}
               </div>
             ))}
           </div>
@@ -136,7 +115,6 @@ function Home() {
       <div className="video-container">
         <video
           src="https://mittstore.com/cdn/shop/videos/c/vp/30a58a53e5ec4dc98492115906cdbd00/30a58a53e5ec4dc98492115906cdbd00.SD-480p-1.5Mbps-43376959.mp4?v=0"
-          // controls
           autoPlay
           loop
           muted
@@ -151,13 +129,15 @@ function Home() {
             Mittsure Technologies is a revolutionary startup that provides
             end-to-end solutions to schools for all their requirements, from
             academics to infrastructure. The primary objective of Mittsure is to
-            empower schools under NEP 2020. Mittsure is also facilitating
-            schools by partnering with startups and organizations, developing
-            products and services for pre-primary, primary, secondary, higher
-            secondary education, and school infrastructure.
+            empower schools under NEP 2020. Mittsure is also facilitating schools
+            by partnering with startups and organizations, developing products and
+            services for pre-primary, primary, secondary, higher secondary
+            education, and school infrastructure.
           </p>
           <div className="title4">
-            <Link to={"https://www.mittsure.com"} target="_blank"><button style={{ cursor: "pointer" }}>About us</button></Link>
+            <Link to={"https://www.mittsure.com"} target="_blank">
+              <button style={{ cursor: "pointer" }}>About us</button>
+            </Link>
           </div>
         </div>
       </div>
@@ -165,7 +145,7 @@ function Home() {
         <div className="detailCard">
           <img src={trust} alt="trusted" />
           <h5>Trusted platform</h5>
-          <p>Provide security capabilites</p>
+          <p>Provide security capabilities</p>
         </div>
         <div className="detailCard">
           <img src={secure} alt="trusted" />
@@ -175,15 +155,19 @@ function Home() {
         <div className="detailCard">
           <img src={customer} alt="trusted" />
           <h5>Become a Mittsure customer</h5>
-          <p>It's intuitive,and it helps you leverage<br />
-            every money you spend</p>
+          <p>
+            It's intuitive, and it helps you leverage
+            <br />
+            every money you spend
+          </p>
         </div>
         <div className="detailCard">
           <img src={support} alt="trusted" />
-          <h5>Customer Support </h5>
+          <h5>Customer Support</h5>
           <p>Call or email us 24/7</p>
         </div>
       </div>
+      <Testimonials/>
       <Clients />
       <Footer />
     </div>

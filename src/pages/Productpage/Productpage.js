@@ -10,6 +10,7 @@ const Productpage = () => {
   const [products, setProducts] = useState([]);
   const [favorites, setFavorites] = useState(new Set());
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { searchTerm, setSearchTerm } = useContext(SearchContext);
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -25,13 +26,20 @@ const Productpage = () => {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const response = await fetch("http://localhost:5000/api/products");
       const data = await response.json();
+      console.log("API Response:", data);
       if (data.success) {
+        console.log("Fetched Products:", data.data);
         setProducts(data.data);
+      } else {
+        console.error("API returned unsuccessful:", data.message);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,16 +82,24 @@ const Productpage = () => {
     const matchesSearch =
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    const matchesCategory =
+      !selectedCategory || product.category === selectedCategory;
 
     let matchesSubSubcategory = true;
     if (subSubcategoryId) {
       const subSubIdFromUrl = parseInt(subSubcategoryId, 10);
       const productSubSubId =
-        product.sub_subcategory_id !== undefined && product.sub_subcategory_id !== null
+        product.sub_subcategory_id !== undefined &&
+        product.sub_subcategory_id !== null
           ? Number(product.sub_subcategory_id)
           : null;
       matchesSubSubcategory = productSubSubId === subSubIdFromUrl;
+      console.log("SubSubcategory Filter:", {
+        productId: product.id,
+        productSubSubId,
+        subSubIdFromUrl,
+        matchesSubSubcategory,
+      });
     }
 
     let matchesSubcategory = true;
@@ -94,12 +110,27 @@ const Productpage = () => {
           ? Number(product.subcategory_id)
           : null;
       matchesSubcategory = productSubId === subIdFromUrl;
+      console.log("Subcategory Filter:", {
+        productId: product.id,
+        productSubId,
+        subIdFromUrl,
+        matchesSubcategory,
+      });
     }
 
-    return matchesSearch && matchesCategory && matchesSubSubcategory && matchesSubcategory;
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesSubSubcategory &&
+      matchesSubcategory
+    );
   });
 
   const categories = [...new Set(products.map((p) => p.category))];
+
+  if (loading) {
+    return <div>Loading products...</div>;
+  }
 
   return (
     <div className="app-container1">
@@ -116,7 +147,9 @@ const Productpage = () => {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`category-pill1 ${selectedCategory === category ? "active" : ""}`}
+              className={`category-pill1 ${
+                selectedCategory === category ? "active" : ""
+              }`}
             >
               {category}
             </button>
@@ -135,7 +168,9 @@ const Productpage = () => {
                   <img
                     src={
                       product.images && product.images.split(",")[0]
-                        ? `http://localhost:5000/${product.images.split(",")[0].trim()}`
+                        ? `http://localhost:5000/${product.images
+                            .split(",")[0]
+                            .trim()}`
                         : "/placeholder.jpg"
                     }
                     alt={product.name}
@@ -144,6 +179,19 @@ const Productpage = () => {
                   <div className="category-tag1">
                     <span>{product.category}</span>
                   </div>
+                  <button
+                    className="favorite-button1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(product.id);
+                    }}
+                  >
+                    <Heart
+                      size={20}
+                      fill={favorites.has(product.id) ? "red" : "none"}
+                      color={favorites.has(product.id) ? "red" : "grey"}
+                    />
+                  </button>
                 </div>
 
                 <div className="product-details1">
@@ -174,6 +222,7 @@ const Productpage = () => {
                       }}
                       className="add-to-cart-button1"
                     >
+                      <ShoppingCart size={20} />
                       Add to Cart
                     </button>
                   </div>
@@ -181,7 +230,9 @@ const Productpage = () => {
               </div>
             ))
           ) : (
-            <div>No products found for this category or subcategory.</div>
+            <div className="no-products1">
+              No products found for this category or subcategory.
+            </div>
           )}
         </div>
       </main>

@@ -1,6 +1,6 @@
 import React from "react";
 
-const TestimonialCard = ({ name, image, text,designation }) => {
+const TestimonialCard = ({ name, image, text, designation }) => {
   return (
     <div className="testimonial">
       <img src={image} alt={name} />

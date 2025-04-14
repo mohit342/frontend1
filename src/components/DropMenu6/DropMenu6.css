@@ -1,47 +1,48 @@
 .dropdown6 {
     position: relative;
     display: inline-block;
-  }
-  
-  .dropdown6-toggle {
+}
+
+.dropdown6-toggle {
     display: flex;
     align-items: center;
     cursor: pointer;
     padding: 8px;
     color: #333;
-  }
-  
-  .dropdown6-toggle:hover {
+}
+
+.dropdown6-toggle:hover {
     color: #007bff;
-  }
-  
-  .dropdown6-menu {
+}
+
+.dropdown6-menu {
     position: absolute;
-    right: 0;
     top: 100%;
+    left: 5px;
     background-color: white;
     min-width: 150px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     border-radius: 4px;
     z-index: 1000;
-  }
-  
-  .dropdown6-menu ul {
+    /* display: block; Ensure it's displayed when rendered */
+}
+
+.dropdown6-menu ul {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-  
-  .dropdown6-menu li {
-    padding: 8px 16px;
-  }
-  
-  .dropdown6-menu li:hover {
+}
+
+.dropdown6-menu li {
+    padding: 5px 5px;
+}
+
+.dropdown6-menu li:hover {
     background-color: #f5f5f5;
-  }
-  
-  .dropdown6-menu a,
-  .dropdown6-menu button {
+}
+
+.dropdown6-menu a,
+.dropdown6-menu button {
     text-decoration: none;
     color: #333;
     display: block;
@@ -50,9 +51,8 @@
     background: none;
     text-align: left;
     cursor: pointer;
-    padding: 0;
   }
-  
-  .dropdown6-menu button:hover {
+ 
+.dropdown6-menu button:hover {
     color: #007bff;
-  }
+}

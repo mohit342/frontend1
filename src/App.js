@@ -21,6 +21,7 @@ import SchoolProfile from './components/SchoolProfile/SchoolProfile';
 import SeProfile from './components/seProfile/SeProfile';
 import OrderSuccess from './components/OrderSuccess/OrderSuccess';
 import { SearchProvider } from './context/SearchContext';
+import Return from './components/Return/Return';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
        <Route path='/leader' element={<Leader/>}/>
        <Route path='/testinomials' element={<Testimonials/>}/>
        <Route path='/OrderSuccess' element={<OrderSuccess/>}/>
+       <Route path='/Return' element={<Return/>}/>
 
      </Routes>
          

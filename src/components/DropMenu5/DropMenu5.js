@@ -70,7 +70,7 @@ const DropMenu5 = () => {
             </div>
           </div>
 
-          <div
+          {/* <div
             className="menu-item submenu-trigger"
             onMouseEnter={() => handleMenuHover('Testimonials')}
             onMouseLeave={() => handleMenuLeave('Testimonials')}
@@ -78,7 +78,7 @@ const DropMenu5 = () => {
             <div className="menu-item-content">
               <Link to='/testinomials'>Testinomials</Link>
             </div>
-          </div>
+          </div> */}
         </div>
       </nav>
     </div>

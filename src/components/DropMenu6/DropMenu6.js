@@ -34,7 +34,7 @@ const DropMenu6 = ({ user, setUser }) => {
             {/* <Link href="/"> */}
             <li>
                
-              <button onClick={handleLogout} style={{fontSize:"18px"}}>Logout</button> </li>
+              <button onClick={handleLogout} style={{fontSize:"16px"}}>Logout</button> </li>
               {/* </Link> */}
            
           </ul>

@@ -2,6 +2,7 @@ import React from "react";
 import "./About.css";
 import Header from "../../components/header/Header";
 import mosqueImage from "../../assets/about.jpg"; // Ensure the image is placed in public/assets/
+import Footer from "../Footer/Footer";
 
 const About = () => {
   
@@ -27,6 +28,7 @@ const About = () => {
         </div>
       </div>
     </section>
+    <Footer/>
     </div>
     
   );

@@ -1,57 +1,254 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-  
+/* Testimonials Section */
+.testimonials {
+  background-image: url('../../assets/page1.gif');
+  background-size: cover;
+  background-position: center;
+  color: #1a2d4e;
+  padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 1.5rem);
+  position: relative;
+  min-height: clamp(60vh, 80vw, 80vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.testimonials h1 {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+/* Testimonial Card */
+.testimonial {
+  background: #e3f2ff;
+  color: #1e3a8a;
+  border-radius: 10px;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  max-width: clamp(300px, 80vw, 500px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  margin: 0 auto;
+}
+
+.testimonial img {
+  width: clamp(80px, 20vw, 120px);
+  height: clamp(80px, 20vw, 120px);
+  border-radius: 50%;
+  margin-bottom: clamp(0.5rem, 2vw, 0.75rem);
+}
+
+.testimonial h2 {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  margin: clamp(0.5rem, 2vw, 0.75rem) 0;
+}
+
+.testimonial h4 {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  color: #666;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+}
+
+.testimonial p {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  line-height: 1.5;
+}
+
+/* Decorative Dots */
+.dots {
+  position: absolute;
+  top: clamp(0.5rem, 2vw, 0.75rem);
+  left: clamp(0.5rem, 2vw, 0.75rem);
+  display: grid;
+  grid-template-columns: repeat(5, clamp(6px, 1.5vw, 8px));
+  grid-gap: clamp(3px, 1vw, 5px);
+}
+
+.dot {
+  width: clamp(6px, 1.5vw, 8px);
+  height: clamp(6px, 1.5vw, 8px);
+  background-color: #34d399;
+  border-radius: 50%;
+}
+
+/* Navigation Buttons */
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: clamp(200px, 60vw, 400px);
+  margin-top: clamp(1rem, 3vw, 1.5rem);
+}
+
+.nav-button1 {
+  background: #e3f2ff;
+  border: none;
+  cursor: pointer;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  color: #333;
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.nav-button1:hover {
+  background-color: #d1e8ff;
+}
+
+.nav-button1:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Optional Illustration and Logo */
+.illustration {
+  position: absolute;
+  right: clamp(1rem, 3vw, 1.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(80px, 20vw, 120px);
+  height: auto;
+  display: none; /* Hidden by default, can be enabled if needed */
+}
+
+.logo {
+  position: absolute;
+  right: clamp(1rem, 3vw, 1.5rem);
+  bottom: clamp(1rem, 3vw, 1.5rem);
+  width: clamp(60px, 15vw, 80px);
+  height: auto;
+  display: none; /* Hidden by default, can be enabled if needed */
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 1200px) {
   .testimonials {
-    padding: 50px 20px;
+    min-height: clamp(50vh, 70vw, 70vh);
   }
-  
-  h1 {
-    font-size: 2.8rem;
-    color: #4A6FA5;
-  }
-  
-  .testimonials-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    justify-content: center;
-    margin-top: 30px;
-  }
-  
+
   .testimonial {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: transform 0.3s;
+    max-width: clamp(280px, 75vw, 450px);
   }
-  
-  .testimonial:hover {
-    transform: scale(1.05);
+
+  .nav-buttons {
+    width: clamp(180px, 55vw, 350px);
   }
-  
+}
+
+@media (max-width: 992px) {
+  .testimonials {
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(0.75rem, 2vw, 1rem);
+  }
+
+  .testimonials h1 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+  }
+
   .testimonial img {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: clamp(70px, 18vw, 100px);
+    height: clamp(70px, 18vw, 100px);
   }
-  
-  
+
   .testimonial h2 {
-    margin: 10px 0;
-    font-size: 1.8rem;
-    color: #055d21;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
   }
-  
+
+  .testimonial h4,
   .testimonial p {
-    font-size: 0.9rem;
-    color: #666;
+    font-size: clamp(0.7rem, 1.8vw, 0.9rem);
   }
+
+  .nav-buttons {
+    width: clamp(160px, 50vw, 300px);
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonials {
+    min-height: clamp(40vh, 60vw, 60vh);
+  }
+
+  .testimonial {
+    max-width: clamp(250px, 70vw, 400px);
+    padding: clamp(0.75rem, 2vw, 1rem);
+  }
+
+  .dots {
+    grid-template-columns: repeat(5, clamp(5px, 1.2vw, 6px));
+    grid-gap: clamp(2px, 0.8vw, 4px);
+  }
+
+  .dot {
+    width: clamp(5px, 1.2vw, 6px);
+    height: clamp(5px, 1.2vw, 6px);
+  }
+
+  .nav-button1 {
+    font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+    padding: clamp(0.4rem, 1.5vw, 0.6rem);
+  }
+}
+
+@media (max-width: 576px) {
+  .testimonials {
+    min-height: clamp(30vh, 50vw, 50vh);
+    padding: clamp(1rem, 3vw, 1.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  }
+
+  .testimonials h1 {
+    font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+  }
+
+  .testimonial {
+    max-width: clamp(200px, 90vw, 350px);
+  }
+
+  .testimonial img {
+    width: clamp(60px, 15vw, 80px);
+    height: clamp(60px, 15vw, 80px);
+  }
+
+  .testimonial h2 {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+  }
+
+  .testimonial h4,
+  .testimonial p {
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+  }
+
+  .nav-buttons {
+    width: clamp(120px, 80vw, 250px);
+  }
+
+  .nav-button1 {
+    font-size: clamp(0.7rem, 2vw, 1rem);
+  }
+
+  .illustration,
+  .logo {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .testimonials {
+    min-height: clamp(25vh, 40vw, 40vh);
+  }
+
+  .testimonial {
+    max-width: clamp(180px, 85vw, 300px);
+  }
+
+  .dots {
+    grid-template-columns: repeat(5, clamp(4px, 1vw, 5px));
+    grid-gap: clamp(1px, 0.5vw, 3px);
+  }
+
+  .dot {
+    width: clamp(4px, 1vw, 5px);
+    height: clamp(4px, 1vw, 5px);
+  }
+
+  .nav-buttons {
+    width: clamp(100px, 75vw, 200px);
+  }
+}

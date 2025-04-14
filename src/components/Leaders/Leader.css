@@ -1,330 +1,89 @@
-/* Leader.css */
 .team-section {
-  min-height: 100vh;
-  background: #f5f1e9; /* Soft cream base color */
-  padding: 100px 20px 50px;
-  font-family: 'Cinzel', serif;
-  color: #1e3c72;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Enhanced Attractive Background */
-.team-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-      135deg,
-      rgba(245, 241, 233, 0.15) 0%, /* Light cream */
-      rgba(250, 245, 235, 0.4) 30%, /* Warm beige */
-      rgba(255, 248, 220, 0.6) 70%, /* Pale gold */
-      rgba(245, 241, 233, 1) 100% /* Back to soft cream */
-  );
-  /* Subtle texture overlay */
-  background-image: radial-gradient(circle at 20% 30%, rgba(250, 235, 215, 0.05) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 70%, rgba(255, 245, 230, 0.05) 0%, transparent 50%);
-  background-blend-mode: overlay;
-  z-index: -1;
-  opacity: 0.9;
-  animation: pulseBackground 8s infinite alternate ease-in-out;
-}
-
-/* Pulsing Animation for Background */
-@keyframes pulseBackground {
-  0% {
-      opacity: 0.9;
-      transform: scale(1);
-  }
-  50% {
-      opacity: 0.95;
-      transform: scale(1.02);
-  }
-  100% {
-      opacity: 0.9;
-      transform: scale(1);
-  }
-}
-
-/* Team Header - Elegant and Bold */
-.team-header {
   text-align: center;
-  margin-bottom: 80px;
-  position: relative;
-  z-index: 1;
+  padding: 50px;
+  background: linear-gradient(135deg, #013770, white);
+  overflow-x: hidden;
 }
 
 .team-header h1 {
-  font-size: 4.5rem;
-  font-weight: 700;
-  color: #1e3c72;
-  text-transform: uppercase;
-  letter-spacing: 8px;
-  text-shadow: 0 2px 10px rgba(30, 60, 114, 0.2);
-  animation: fadeIn 2s ease-in-out;
+  font-size: 3.5rem;
+  margin-bottom: 30px;
+  color:white;
+  font-weight: 800;
 }
 
-.team-header span {
-  display: block;
-  font-size: 1.6rem;
-  color: #6d8299;
-  font-family: 'Lora', serif;
-  font-weight: 400;
-  margin-top: 10px;
-  letter-spacing: 3px;
-  text-shadow: 0 1px 5px rgba(109, 130, 153, 0.1);
-}
-
-/* Chairman Card - Polished and Interactive */
+/* Chairman - Takes full width */
 .chairman-card {
-  max-width: 600px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 3px solid #1e3c72;
-  border-radius: 20px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08), inset 0 0 10px rgba(30, 60, 114, 0.05);
-  padding: 40px 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  position: relative;
-  z-index: 1;
-  transition: all 0.4s ease;
-  overflow: hidden;
+  width: 50%;
+  margin: 0 auto 30px;
 }
 
-.chairman-card:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12), inset 0 0 15px rgba(30, 60, 114, 0.1);
-  border-color: #2a5298;
-}
-
-.chairman-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(173, 216, 230, 0.2), transparent 60%);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  z-index: -1;
-}
-
-.chairman-card:hover::before {
-  opacity: 0.5;
-}
-
-.team-photo {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin: 0 auto 25px;
-  border: 6px solid #1e3c72;
-  box-shadow: 0 0 15px rgba(30, 60, 114, 0.3);
-  transition: all 0.4s ease;
-}
-
-.chairman-card:hover .team-photo {
-  border-color: #2a5298;
-  box-shadow: 0 0 25px rgba(42, 82, 152, 0.5);
-  transform: rotate(5deg) scale(1.05);
-}
-
-.chairman-card h2 {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: #1e3c72;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-  text-shadow: 0 1px 5px rgba(30, 60, 114, 0.1);
-}
-
-.role {
-  font-size: 1.6rem;
-  color: #2a5298;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-  text-shadow: 0 1px 3px rgba(42, 82, 152, 0.1);
-}
-
-.description {
-  font-size: 1.2rem;
-  color: #555;
-  line-height: 1.8;
-  font-family: 'Lora', serif;
-  margin-bottom: 20px;
-  font-style: italic;
-  text-align: center;
-}
-
-.quote {
-  font-size: 1.3rem;
-  color: #2a5298;
-  font-family: 'Lora', serif;
-  font-style: italic;
-  margin-top: 15px;
-  text-shadow: 0 1px 3px rgba(42, 82, 152, 0.1);
-}
-
-/* Directors Container - Stylish Grid */
+/* Directors - Appear in a row */
 .directors-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 40px;
-  max-width: 1200px;
-  margin-top: 50px;
-  padding: 0 20px;
-  position: relative;
-  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .director-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #1e3c72;
+  background: #fff;
+  padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  padding: 25px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: all 0.4s ease;
-  animation: fadeInUp 1.5s ease-in-out;
+  width: 40%;
 }
 
-.director-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1), 0 0 20px rgba(30, 60, 114, 0.2);
-  border-color: #2a5298;
-}
-
-.director-card .team-photo {
+/* Common Styles */
+.team-photo {
   width: 150px;
   height: 150px;
-  border: 4px solid #1e3c72;
-  box-shadow: 0 0 10px rgba(30, 60, 114, 0.2);
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 15px;
 }
 
-.director-card:hover .team-photo {
-  border-color: #2a5298;
-  box-shadow: 0 0 20px rgba(42, 82, 152, 0.4);
-  transform: rotate(-5deg) scale(1.05);
+.role {
+  font-weight: bold;
+  color: #007bff;
 }
 
-.director-card h3 {
-  font-size: 2.2rem;
-  color: #1e3c72;
-  font-weight: 700;
+.description {
+  font-size: 14px;
+  color: #666;
+}
+
+.social-icons {
   margin-top: 15px;
-  text-shadow: 0 1px 3px rgba(30, 60, 114, 0.1);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+.social-icons i {
+  font-size: 20px;
+  margin: 0 10px;
+  color: #555;
+  cursor: pointer;
 }
 
-@keyframes fadeInUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+.social-icons i:hover {
+  color: #007bff;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .team-header h1 {
-      font-size: 3.5rem;
-  }
-
-  .team-header span {
-      font-size: 1.4rem;
-  }
-
   .chairman-card {
-      max-width: 90%;
-      padding: 30px 20px;
+      width: 80%;
   }
-
-  .team-photo {
-      width: 180px;
-      height: 180px;
-  }
-
-  .chairman-card h2 {
-      font-size: 2.4rem;
-  }
-
-  .role {
-      font-size: 1.4rem;
-  }
-
-  .description {
-      font-size: 1.1rem;
-  }
-
-  .quote {
-      font-size: 1.2rem;
-  }
-
-  .director-card .team-photo {
-      width: 130px;
-      height: 130px;
-  }
-
-  .director-card h3 {
-      font-size: 1.8rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .team-header h1 {
-      font-size: 2.8rem;
-  }
-
-  .team-header span {
-      font-size: 1.2rem;
-  }
-
-  .chairman-card {
-      padding: 20px 15px;
-  }
-
-  .team-photo {
-      width: 150px;
-      height: 150px;
-  }
-
-  .chairman-card h2 {
-      font-size: 2rem;
-  }
-
-  .role {
-      font-size: 1.2rem;
-  }
-
-  .description {
-      font-size: 1rem;
-  }
-
-  .quote {
-      font-size: 1.1rem;
-  }
-
   .directors-container {
-      grid-template-columns: 1fr;
+      flex-direction: column;
+      align-items: center;
   }
-
-  .director-card .team-photo {
-      width: 120px;
-      height: 120px;
-  }
-
-  .director-card h3 {
-      font-size: 1.6rem;
+  .director-card {
+      width: 80%;
   }
 }

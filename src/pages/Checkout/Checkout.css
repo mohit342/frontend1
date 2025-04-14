@@ -14,6 +14,35 @@
     gap: 2rem;
     animation: fadeIn 0.6s ease-out;
   }
+  .footerSection3 button {
+    background-color: #079848;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-weight: 600;
+    white-space: nowrap; /* Ensures button text stays on one line */
+  }
+  
+  .footerSection3 button:hover {
+    background-color: #044783;
+    color: white;
+  }
+  
+  .footerSection3 {
+    flex: 0 0 auto;
+    min-width: 200px;
+    margin: 10px;
+  }
+  
+  .footerSection3 h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: white;
+  }
   
   @keyframes fadeIn {
     from {

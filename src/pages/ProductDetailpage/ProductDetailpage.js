@@ -183,7 +183,7 @@ function ProductDetailpage() {
             )}
           </p> */}
           <div className="price-container1">
-  <span className="current-price1">₹{product.price.toFixed(2)}</span>
+  <span className="current-price11">₹{product.price.toFixed(2)}</span>
   {product.discount_percentage > 0 && (
     <>
       <span className="original-price1">
