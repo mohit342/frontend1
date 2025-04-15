@@ -16,15 +16,17 @@ const Checkout = () => {
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState("");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     address: "",
+    pincode: "",
     city: "",
     state: "",
-    pincode: "",
     phone: "",
   });
   const [errors, setErrors] = useState({});
@@ -38,50 +40,88 @@ const Checkout = () => {
         phone: user.mobile || prevData.phone,
       }));
 
-      const fetchCoupons = async () => {
-        try {
-          const response = await axios.get(`http://localhost:5000/api/coupons/user/${user.id}`);
-          const enrichedCoupons = await Promise.all(
-            response.data.map(async (coupon) => {
-              try {
-                const validationResponse = await axios.post("http://localhost:5000/api/coupons/validate", {
-                  code: coupon.code,
-                  userId: user.id,
-                  userType: user.role,
-                });
-                return {
-                  ...coupon,
-                  school_name: validationResponse.data.school_name || 'Unknown School',
-                };
-              } catch (error) {
-                return { ...coupon, school_name: 'Unknown School' };
-              }
-            })
-          );
-          setAvailableCoupons(enrichedCoupons);
-        } catch (error) {
-          console.error("Error fetching coupons:", error);
-        }
-      };
-
-      fetchCoupons();
+      if (user.role !== 'se') {
+        const fetchCoupons = async () => {
+          try {
+            const response = await axios.get(`http://localhost:5000/api/coupons/user/${user.id}`);
+            const enrichedCoupons = await Promise.all(
+              response.data.map(async (coupon) => {
+                try {
+                  const validationResponse = await axios.post("http://localhost:5000/api/coupons/validate", {
+                    code: coupon.code,
+                    userId: user.id,
+                    userType: user.role,
+                  });
+                  return {
+                    ...coupon,
+                    school_name: validationResponse.data.school_name || 'Unknown School',
+                  };
+                } catch (error) {
+                  return { ...coupon, school_name: 'Unknown School' };
+                }
+              })
+            );
+            setAvailableCoupons(enrichedCoupons);
+          } catch (error) {
+            console.error("Error fetching coupons:", error);
+          }
+        };
+        fetchCoupons();
+      }
     }
   }, [user]);
 
   useEffect(() => {
     const fetchCart = async () => {
-        if (user) {
-            try {
-                const response = await axios.get(`http://localhost:5000/api/cart/${user.id}`);
-                setCartItems(response.data.data.items || []);
-            } catch (error) {
-                console.error('Error fetching cart on checkout:', error);
-                setCartItems([]);
-            }
+      if (user) {
+        try {
+          const response = await axios.get(`http://localhost:5000/api/cart/${user.id}`);
+          setCartItems(response.data.data.items || []);
+        } catch (error) {
+          console.error('Error fetching cart on checkout:', error);
+          setCartItems([]);
         }
+      }
     };
     fetchCart();
-}, [user, setCartItems]);
+  }, [user, setCartItems]);
+
+  const handlePincodeChange = async (e) => {
+    const pincode = e.target.value;
+    setFormData({ ...formData, pincode });
+    setErrors({ ...errors, pincode: "" });
+    setPincodeError("");
+
+    if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+      setPincodeLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:5000/api/validate-pincode/${pincode}`);
+        setFormData((prevData) => ({
+          ...prevData,
+          city: response.data.city,
+          state: response.data.state,
+          pincode,
+        }));
+      } catch (error) {
+        setPincodeError(error.response?.data?.error || "Failed to fetch city and state.");
+        setFormData((prevData) => ({
+          ...prevData,
+          city: "",
+          state: "",
+          pincode,
+        }));
+      } finally {
+        setPincodeLoading(false);
+      }
+    } else if (pincode.length > 0) {
+      setPincodeError("PIN code must be 6 digits.");
+      setFormData((prevData) => ({
+        ...prevData,
+        city: "",
+        state: "",
+      }));
+    }
+  };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
   const shipping = cartItems.length > 0 ? 40 : 0;
@@ -114,7 +154,7 @@ const Checkout = () => {
 
       setAdditionalDiscount(response.data.discount_percentage);
       setCouponApplied(true);
-      setCouponSuccess(`Coupon applied!`);
+      setCouponSuccess(`Coupon applied! You received ${response.data.discount_percentage}% discount from ${response.data.school_name}.`);
     } catch (error) {
       console.error("Coupon validation error:", error.response?.data || error.message);
       setCouponError(error.response?.data?.error || "Failed to validate coupon");
@@ -135,8 +175,10 @@ const Checkout = () => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setFormData({ ...formData, [id]: value });
-    setErrors({ ...errors, [id]: "" });
+    if (id !== "pincode") {
+      setFormData({ ...formData, [id]: value });
+      setErrors({ ...errors, [id]: "" });
+    }
   };
 
   const handleCouponChange = (e) => {
@@ -155,9 +197,13 @@ const Checkout = () => {
       newErrors.email = "Invalid email format";
     }
     if (!formData.address.trim()) newErrors.address = "Address is required";
+    if (!formData.pincode.trim()) {
+      newErrors.pincode = "Pincode is required";
+    } else if (!/^\d{6}$/.test(formData.pincode)) {
+      newErrors.pincode = "Pincode must be 6 digits";
+    }
     if (!formData.city.trim()) newErrors.city = "City is required";
     if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.pincode.trim()) newErrors.pincode = "Pincode is required";
     if (!formData.phone.trim()) {
       newErrors.phone = "Phone number is required";
     } else if (!/^\d{10}$/.test(formData.phone)) {
@@ -186,7 +232,7 @@ const Checkout = () => {
       pincode: formData.pincode,
       phone: formData.phone,
       total,
-      couponCode: couponApplied ? coupon : null,
+      couponCode: couponApplied && user.role !== 'se' ? coupon : null,
       cartItems,
     };
 
@@ -202,12 +248,13 @@ const Checkout = () => {
       }
       alert(message);
       navigate("/OrderSuccess");
-      setFormData({ name: "", email: "", address: "", city: "", state: "", pincode: "", phone: "" });
+      setFormData({ name: "", email: "", address: "", pincode: "", city: "", state: "", phone: "" });
       setCoupon("");
       setCouponApplied(false);
       setAdditionalDiscount(0);
-      setCartItems([]);
-      localStorage.removeItem("cartItems");
+      setCartItems([]); // Clear cart items in context
+      localStorage.removeItem("cartItems"); // Clear local storage
+      sessionStorage.removeItem("guest_cart"); // Clear guest cart in session storage
     } catch (error) {
       alert(error.response?.data?.error || "Failed to process order");
     } finally {
@@ -222,19 +269,37 @@ const Checkout = () => {
         <div className="checkout-grid">
           <div className="checkout-form">
             <h2 className="section-title">Shipping Information</h2>
-            {Object.entries(formData).map(([key, value]) => (
+            {['name', 'email', 'address', 'pincode', 'city', 'state', 'phone'].map((key) => (
               <div className="form-group" key={key}>
                 <label htmlFor={key}>
                   {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1")}
                 </label>
-                <input
-                  type={key === "email" ? "email" : key === "phone" || key === "pincode" ? "number" : "text"}
-                  id={key}
-                  value={value}
-                  onChange={handleInputChange}
-                  placeholder={`Enter ${key}...`}
-                  required
-                />
+                {key === "pincode" ? (
+                  <>
+                    <input
+                      type="text"
+                      id={key}
+                      value={formData[key]}
+                      onChange={handlePincodeChange}
+                      placeholder="Enter pincode..."
+                      maxLength="6"
+                      required
+                      disabled={pincodeLoading}
+                    />
+                    {pincodeLoading && <span className="loading-message">Fetching city and state...</span>}
+                    {pincodeError && <span className="error-message">{pincodeError}</span>}
+                  </>
+                ) : (
+                  <input
+                    type={key === "email" ? "email" : key === "phone" ? "number" : "text"}
+                    id={key}
+                    value={formData[key]}
+                    onChange={handleInputChange}
+                    placeholder={`Enter ${key}...`}
+                    required
+                    disabled={key === "city" || key === "state"}
+                  />
+                )}
                 {errors[key] && <span className="error-message">{errors[key]}</span>}
               </div>
             ))}
@@ -256,37 +321,37 @@ const Checkout = () => {
                   </div>
                 ))}
 
-                <div className="form-group">
-                  <label htmlFor="coupon">Coupon Code</label>
-                  <div className="coupon-input-container">
-                    <select
-                      id="coupon"
-                      value={coupon}
-                      onChange={handleCouponChange}
-                      disabled={couponApplied || loading}
-                      className={couponApplied ? "input-success" : ""}
-                    >
-                      <option value="">Select a coupon</option>
-                      {availableCoupons.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} ({c.discount_percentage}% off - {c.school_name})
-                        </option>
-                      ))}
-                    </select>
-                    <div className="footerSection3">
-                    <button
-                      onClick={couponApplied ? removeCoupon : applyCoupon}
-                      disabled={loading}
-                      className={`coupon-button ${couponApplied ? "remove-coupon" : ""}`} 
-                    >
-                      {loading ? "Processing..." : couponApplied ? "Remove" : "Apply"}
-                    </button>
+                {user && user.role !== 'se' && (
+                  <div className="form-group">
+                    <label htmlFor="coupon">Coupon Code</label>
+                    <div className="coupon-input-container">
+                      <select
+                        id="coupon"
+                        value={coupon}
+                        onChange={handleCouponChange}
+                        disabled={couponApplied || loading}
+                        className={couponApplied ? "input-success" : ""}
+                      >
+                        <option value="">Select a coupon</option>
+                        {availableCoupons.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} ({c.discount_percentage}% off - {c.school_name})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={couponApplied ? removeCoupon : applyCoupon}
+                        disabled={loading}
+                        className={`coupon-button ${couponApplied ? "remove-coupon" : ""}`}
+                      >
+                        {loading ? "Processing..." : couponApplied ? "Remove" : "Apply"}
+                      </button>
                     </div>
+                    {couponError && <span className="error-message">{couponError}</span>}
+                    {couponSuccess && <span className="success-message">{couponSuccess}</span>}
+                    {!user && <p className="info-message">Login required to use coupons</p>}
                   </div>
-                  {couponError && <span className="error-message">{couponError}</span>}
-                  {couponSuccess && <span className="success-message">{couponSuccess}</span>}
-                  {!user && <p className="info-message">Login required to use coupons</p>}
-                </div>
+                )}
 
                 <div className="total-section">
                   <div className="summary-item">
@@ -301,7 +366,7 @@ const Checkout = () => {
                     <span>GST (10%)</span>
                     <span className="price">₹{tax.toFixed(2)}</span>
                   </div>
-                  {couponApplied && (
+                  {couponApplied && user.role !== 'se' && (
                     <div className="summary-item discount-row">
                       <span>Coupon Discount</span>
                       <span className="price discount">-₹{couponDiscount.toFixed(2)}</span>

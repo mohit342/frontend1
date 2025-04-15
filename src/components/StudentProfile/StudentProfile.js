@@ -29,6 +29,15 @@ const StudentProfile = () => {
   const [coupons, setCoupons] = useState([]);
   const [couponsLoading, setCouponsLoading] = useState(false);
   const [couponsError, setCouponsError] = useState(null);
+  const getImageSrc = (item) => {
+    if (item.images && item.images.length > 0) {
+      return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
+    } else if (item.image) {
+      return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
+    }
+    return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
+  };
+  
   const [rewardPoints, setRewardPoints] = useState(0); // School reward points
 
   // Function to generate slug
@@ -102,13 +111,13 @@ const StudentProfile = () => {
       });
   
         // Fetch student coupons
-        try {
+        try{
           const pointsResponse = await axios.get(`http://localhost:5000/api/student-school-points/${storedUser.id}`);
           setRewardPoints(pointsResponse.data.reward_points || 0);
-        } catch (error) {
-          console.error("Error fetching school reward points:", error);
-          setRewardPoints(0); // Fallback to 0 if the request fails
-        }
+      } catch (error) {
+        console.error("Error fetching school reward points:", error);
+        setRewardPoints(0);
+    } 
     setWishlistLoading(true);
       try {
         const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
@@ -348,70 +357,81 @@ const StudentProfile = () => {
         </div>
       );
 
-        
+   
       case 'My order':
         return (
           <div className="content-area">
             <h2><ShoppingBag className="icon" /> My Orders</h2>
-            {ordersLoading ? (
-              <p>Loading orders...</p>
-            ) : ordersError ? (
-              <p>{ordersError}</p>
-            ) : (
-              <div className="orders-list">
-                {orders.length === 0 ? (
-                  <p>No orders found.</p>
-                ) : (
-                  orders.map((order, index) => (
-                    <div key={index} className="order-card">
-                      <div className="order-header">
-                        <div className="order-meta">
-                          <span className="order-id">Order #: {order.id}</span>
-                          <span className="order-date">{new Date(order.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                      <div className="order-items">
-                        {Array.isArray(order.items) ? (
-                          order.items.map((item, itemIndex) => (
-                            <div key={itemIndex} className="order-item">
-                              <img src={item.image || '/placeholder.jpg'} alt={item.name} className="item-image" />
-                              <div className="item-details">
-                                <h4>{item.name}</h4>
-                                <div className="item-meta">
-                                  <span>Quantity: {item.quantity}</span>
-                                  <span>Price: ₹{item.price}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          JSON.parse(order.items).map((item, itemIndex) => (
-                            <div key={itemIndex} className="order-item">
-                              <img src={item.image || '/placeholder.jpg'} alt={item.name} className="item-image" />
-                              <div className="item-details">
-                                <h4>{item.name}</h4>
-                                <div className="item-meta">
-                                  <span>Quantity: {item.quantity}</span>
-                                  <span>Price: ₹{item.price}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div className="order-footer">
-                        <div className="order-total">
-                          <span>Total:</span>
-                          <span className="total-amount">₹{order.total}</span>
-                        </div>
+            <div className="orders-list">
+              {orders.length === 0 ? (
+                <p>No orders found.</p>
+              ) : (
+                orders.map((order, index) => (
+                  <div key={index} className="order-card">
+                    <div className="order-header">
+                      <div className="order-meta">
+                        <span className="order-id">Order #: {order.id}</span>
+                        <span className="order-date">{order.createdAt}</span>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            )}
+                    <div className="order-items">
+                      {Array.isArray(order.items) ? (
+                        order.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        JSON.parse(order.items).map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="order-footer">
+                      <div className="order-total">
+                        <span>Total:</span>
+                        <span className="total-amount">₹{order.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         );
+      
       case 'settings':
         return (
           <div className="content-area">

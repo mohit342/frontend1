@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import "./SeProfile.css";
-import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag } from 'lucide-react';
+import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag, Star, Zap } from 'lucide-react';
 import men from "../../assets/men.jpg";
 import supple from "../../assets/supplies.jpg";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; // Added useLocation
 import { BiSolidSchool } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
 import axios from 'axios';
 
 const SeProfile = () => {
+  // Handle tab from URL query parameter
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tabFromUrl = queryParams.get('tab');
-
+  
+  // Initialize activeTab with tabFromUrl or default to 'Total School'
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'Total School');
   const [user, setUser] = useState({
     full_name: '',
@@ -22,21 +24,33 @@ const SeProfile = () => {
   });
   const [selectedSchool, setSelectedSchool] = useState('');
   const [schools, setSchools] = useState([]);
-  const [generatedCoupon, setGeneratedCoupon] = useState(null);
   const [totalSchools, setTotalSchools] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [ordersError, setOrdersError] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [wishlistError, setWishlistError] = useState(null);
+  const [schoolRewards, setSchoolRewards] = useState([]);
+  const [rewardsLoading, setRewardsLoading] = useState(false);
+  const [rewardsError, setRewardsError] = useState(null);
+  const getImageSrc = (item) => {
+    if (item.images && item.images.length > 0) {
+      return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
+    } else if (item.image) {
+      return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
+    }
+    return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
+  };
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
+  const [redeemPoints, setRedeemPoints] = useState(0); // New state for SE redeem points
 
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+  
   // Sync activeTab with URL changes
   useEffect(() => {
     if (tabFromUrl) {
@@ -94,20 +108,42 @@ const SeProfile = () => {
     fetchUserDataAndData();
   }, []);
 
-  // Sync formData with user data when user changes
+  // New useEffect for fetching school rewards
   useEffect(() => {
-    setFormData({
-      fullName: user.full_name || '',
-      email: user.email || '',
-      password: '',
-      confirmPassword: '',
-    });
-  }, [user]);
+    const fetchSchoolRewards = async () => {
+      try {
+        const seId = localStorage.getItem('seEmployeeId');
+        if (!seId) {
+          setRewardsError("SE ID not found");
+          return;
+        }
+
+        setRewardsLoading(true);
+        const response = await axios.get(`http://localhost:5000/api/se/${seId}/school-rewards`);
+        console.log("School rewards data:", response.data); // Debug log
+        setSchoolRewards(response.data);
+        setRewardsError(null);
+      } catch (error) {
+        console.error("Error fetching school rewards:", error);
+        setRewardsError("Failed to load school rewards data");
+      } finally {
+        setRewardsLoading(false);
+      }
+    };
+
+    fetchSchoolRewards();
+  }, []);
 
   // Fetch schools with coupons
   const fetchSchools = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/schools-with-coupons");
+      const seEmployeeId = localStorage.getItem('seEmployeeId');
+      if (!seEmployeeId) {
+        console.error("SE employee ID not found in localStorage.");
+        return;
+      }
+  
+      const response = await fetch(`http://localhost:5000/api/schools-with-coupons?seEmployeeId=${seEmployeeId}`);
       const data = await response.json();
       setSchools(data);
     } catch (error) {
@@ -122,7 +158,13 @@ const SeProfile = () => {
   // Fetch total schools
   const fetchTotalSchools = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/total-schools");
+      const seEmployeeId = localStorage.getItem('seEmployeeId');
+      if (!seEmployeeId) {
+        console.error("SE employee ID not found in localStorage.");
+        return;
+      }
+  
+      const response = await fetch(`http://localhost:5000/api/total-schools?seEmployeeId=${seEmployeeId}`);
       const data = await response.json();
       setTotalSchools(data);
     } catch (error) {
@@ -167,6 +209,139 @@ const SeProfile = () => {
       .substring(0, 200);
   };
 
+  // Remove item from wishlist
+  const handleRemoveFromWishlist = async (productId) => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (!storedUser || !storedUser.id) return;
+
+    try {
+      await axios.post('http://localhost:5000/api/wishlist/remove', {
+        userId: storedUser.id,
+        productId: productId
+      });
+      setWishlist(prevWishlist => prevWishlist.filter(item => item.id !== productId));
+      setWishlistError(null);
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      setWishlistError('Failed to remove item from wishlist. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const seId = localStorage.getItem('seEmployeeId');
+        if (!seId) {
+          console.error("SE ID not found in localStorage.");
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/se-details/${seId}`);
+        const data = await response.json();
+
+        if (data.seDetails) {
+          const userData = {
+            full_name: `${data.seDetails.first_name} ${data.seDetails.last_name}`,
+            email: data.seDetails.email,
+            role: 'se',
+            userId: data.seDetails.employee_id,
+          };
+          setUser(userData);
+          setFormData({
+            fullName: userData.full_name || '',
+            email: userData.email || '',
+            password: '',
+            confirmPassword: '',
+          });
+
+          // Fetch SE redeem points
+          const pointsResponse = await axios.get(`http://localhost:5000/api/se/${seId}/points`);
+          setRedeemPoints(pointsResponse.data.redeem_points || 0);
+        } else {
+          console.error("SE details not found.");
+        }
+      } catch (error) {
+        console.error("Error fetching SE details or points:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  
+  
+
+  useEffect(() => {
+    fetchSchools();
+  }, []);
+
+
+
+  useEffect(() => {
+    fetchTotalSchools();
+  }, []);
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser || !storedUser.id) return;
+
+      setWishlistLoading(true);
+      try {
+        const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
+        const formattedWishlist = wishlistResponse.data.map(item => ({
+          ...item,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price
+        }));
+        setWishlist(formattedWishlist);
+        setWishlistError(null);
+      } catch (error) {
+        console.error('Error fetching wishlist:', error);
+        setWishlistError('Failed to load wishlist. Please try again later.');
+      } finally {
+        setWishlistLoading(false);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
+
+  // Generate coupon
+  const generateCoupon = async () => {
+    if (!selectedSchool) {
+      alert("Please select a school.");
+      return;
+    }
+
+    const requestBody = {
+      schoolId: selectedSchool,
+      seEmployeeId: user.userId,
+      discountPercentage: 20,
+      validFrom: new Date().toISOString().split("T")[0],
+      validUntil: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
+      maxUses: 999999
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error);
+      } else {
+        alert(`Coupons Generated!\nSchool Coupon: ${data.schoolCouponCode}\nStudent Coupon: ${data.studentCouponCode}`);
+        fetchSchools();
+      }
+    } catch (error) {
+      console.error("Error generating coupon:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -205,60 +380,6 @@ const SeProfile = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred. Please try again.');
-    }
-  };
-
-  // Remove item from wishlist
-  const handleRemoveFromWishlist = async (productId) => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    if (!storedUser || !storedUser.id) return;
-
-    try {
-      await axios.post('http://localhost:5000/api/wishlist/remove', {
-        userId: storedUser.id,
-        productId: productId
-      });
-      setWishlist(prevWishlist => prevWishlist.filter(item => item.id !== productId));
-      setWishlistError(null);
-    } catch (error) {
-      console.error('Error removing from wishlist:', error);
-      setWishlistError('Failed to remove item from wishlist. Please try again.');
-    }
-  };
-
-  // Generate coupon
-  const generateCoupon = async () => {
-    if (!selectedSchool) {
-      alert("Please select a school.");
-      return;
-    }
-
-    const requestBody = {
-      schoolId: selectedSchool,
-      seEmployeeId: user.userId,
-      discountPercentage: 20,
-      validFrom: new Date().toISOString().split("T")[0],
-      validUntil: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
-      maxUses: 2
-    };
-
-    try {
-      const response = await fetch("http://localhost:5000/api/coupons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error);
-      } else {
-        alert(`Coupons Generated!\nSchool Coupon: ${data.schoolCouponCode}\nStudent Coupon: ${data.studentCouponCode}`);
-        fetchSchools();
-      }
-    } catch (error) {
-      console.error("Error generating coupon:", error);
     }
   };
 
@@ -321,6 +442,51 @@ const SeProfile = () => {
             {/* Add address book content here if needed */}
           </div>
         );
+        case 'Total Reward Earns':
+          return (
+            <div className="content-area">
+              <h2><Star className="icon" /> Total Reward Earns</h2>
+              {rewardsLoading ? (
+                <p>Loading rewards data...</p>
+              ) : rewardsError ? (
+                <p>{rewardsError}</p>
+              ) : (
+                <div className="school-rewards-table">
+                  <div className="table-header">
+                    <span className="table-column">School Name</span>
+                    <span className="table-column">Total Purchase Amount</span>
+                    <span className="table-column">Total Points Awarded</span>
+                    <span className="table-column">Latest Order Date</span>
+                  </div>
+                  {schoolRewards.length > 0 ? (
+                    schoolRewards.map((reward, index) => (
+                      <div key={index} className="table-row">
+                        <span className="table-column">{reward.school_name || 'Unknown'}</span>
+                        <span className="table-column">
+                          ₹{typeof reward.purchase_amount === 'number' ? 
+                            reward.purchase_amount.toFixed(2) : 
+                            '0.00'}
+                        </span>
+                        <span className="table-column">
+                          {typeof reward.points_awarded === 'number' ? 
+                            reward.points_awarded.toFixed(2) : 
+                            '0.00'}
+                        </span>
+                        <span className="table-column">
+                          {reward.latest_order_date ? 
+                            new Date(reward.latest_order_date).toLocaleDateString() : 
+                            'N/A'}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No reward data available for associated schools.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        
       case 'Genrate coupons':
         return (
           <div className="content-area">
@@ -344,106 +510,114 @@ const SeProfile = () => {
               <button className="btn-primary" onClick={generateCoupon} disabled={!selectedSchool}>
                 Generate Coupon
               </button>
-              {generatedCoupon && (
-                <div className="coupon-details">
-                  <h3>Coupon Code: {generatedCoupon.code}</h3>
-                  <p>Discount: {generatedCoupon.discount}</p>
-                  <p>Expires on: {generatedCoupon.expiry}</p>
-                  <p>School: {generatedCoupon.school}</p>
+            </div>
+          </div>
+        );
+        case 'Total School':
+          return (
+            <div className="content-area">
+              <h2><BiSolidSchool className="icon" /> Total School</h2>
+              <div className="school-table">
+                <div className="table-header">
+                  <span className="table-column">SE ID</span>
+                  <span className="table-column">School Name</span>
+                  <span className="table-column">School Coupon</span>
+                  <span className="table-column">Student Coupon</span>
+                  <span className="table-column">Generation Date</span>
                 </div>
-              )}
-            </div>
-          </div>
-        );
-      case 'Total School':
-        return (
-          <div className="content-area">
-            <h2><BiSolidSchool className="icon" /> Total School</h2>
-            <div className="school-table">
-              <div className="table-header">
-                <span className="table-column">SE ID</span>
-                <span className="table-column">School Name</span>
-                <span className="table-column">School Coupon</span>
-                <span className="table-column">Student Coupon</span>
-                <span className="table-column">Generation Date</span>
+                {totalSchools.length > 0 ? (
+                  totalSchools.map((school, index) => (
+                    <div key={index} className="table-row">
+                      <span className="table-column">{school.se_id || "N/A"}</span>
+                      <span className="table-column">{school.school_name}</span>
+                      <span className="table-column">{school.school_coupon_code || "Not Generated"}</span>
+                      <span className="table-column">{school.student_coupon_code || "Not Generated"}</span>
+                      <span className="table-column">
+                        {school.generation_date ? new Date(school.generation_date).toLocaleDateString() : "N/A"}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p>No schools registered under your ID.</p>
+                )}
               </div>
-              {totalSchools.length > 0 ? (
-                totalSchools.map((school, index) => (
-                  <div key={index} className="table-row">
-                    <span className="table-column">{school.se_id || "N/A"}</span>
-                    <span className="table-column">{school.school_name}</span>
-                    <span className="table-column">{school.school_coupon_code || "Not Generated"}</span>
-                    <span className="table-column">{school.student_coupon_code || "Not Generated"}</span>
-                    <span className="table-column">{new Date(school.generation_date).toLocaleDateString()}</span>
-                  </div>
-                ))
-              ) : (
-                <p>No schools found.</p>
-              )}
             </div>
-          </div>
-        );
-      case 'My order':
-        return (
-          <div className="content-area">
-            <h2><ShoppingBag className="icon" /> My Orders</h2>
-            <div className="orders-list">
-              {ordersLoading ? (
-                <p>Loading orders...</p>
-              ) : ordersError ? (
-                <p>{ordersError}</p>
-              ) : orders.length === 0 ? (
-                <p>No orders found.</p>
-              ) : (
-                orders.map((order, index) => (
-                  <div key={index} className="order-card">
-                    <div className="order-header">
-                      <div className="order-meta">
-                        <span className="order-id">Order #: {order.id}</span>
-                        <span className="order-date">{order.createdAt}</span>
-                      </div>
-                    </div>
-                    <div className="order-items">
-                      {Array.isArray(order.items) ? (
-                        order.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="order-item">
-                            <img src={item.image} alt={item.name} className="item-image" onError={(e) => (e.target.src = '/placeholder.jpg')} />
-                            <div className="item-details">
-                              <h4>{item.name}</h4>
-                              <div className="item-meta">
-                                <span>Quantity: {item.quantity}</span>
-                                <span>Price: ₹{item.price}</span>
-                              </div>
-                            </div>
+          );
+         
+          
+          case 'My order':
+            return (
+              <div className="content-area">
+                <h2><ShoppingBag className="icon" /> My Orders</h2>
+                <div className="orders-list">
+                  {orders.length === 0 ? (
+                    <p>No orders found.</p>
+                  ) : (
+                    orders.map((order, index) => (
+                      <div key={index} className="order-card">
+                        <div className="order-header">
+                          <div className="order-meta">
+                            <span className="order-id">Order #: {order.id}</span>
+                            <span className="order-date">{order.createdAt}</span>
                           </div>
-                        ))
-                      ) : (
-                        JSON.parse(order.items).map((item, itemIndex) => (
-                          <div key={itemIndex} className="order-item">
-                            <img src={item.image} alt={item.name} className="item-image" onError={(e) => (e.target.src = '/placeholder.jpg')} />
-                            <div className="item-details">
-                              <h4>{item.name}</h4>
-                              <div className="item-meta">
-                                <span>Quantity: {item.quantity}</span>
-                                <span>Price: ₹{item.price}</span>
+                        </div>
+                        <div className="order-items">
+                          {Array.isArray(order.items) ? (
+                            order.items.map((item, itemIndex) => (
+                              <div key={itemIndex} className="order-item">
+                                <img
+                                  src={getImageSrc(item)}
+                                  alt={item.name || 'Order Item'}
+                                  className="item-image"
+                                  onError={(e) => {
+                                    console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                    e.target.src = 'http://localhost:5000/placeholder.jpg';
+                                  }}
+                                />
+                                <div className="item-details">
+                                  <h4>{item.name || 'Unnamed Item'}</h4>
+                                  <div className="item-meta">
+                                    <span>Quantity: {item.quantity || 1}</span>
+                                    <span>Price: ₹{item.price || 0}</span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
+                            ))
+                          ) : (
+                            JSON.parse(order.items).map((item, itemIndex) => (
+                              <div key={itemIndex} className="order-item">
+                                <img
+                                  src={getImageSrc(item)}
+                                  alt={item.name || 'Order Item'}
+                                  className="item-image"
+                                  onError={(e) => {
+                                    console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                    e.target.src = 'http://localhost:5000/placeholder.jpg';
+                                  }}
+                                />
+                                <div className="item-details">
+                                  <h4>{item.name || 'Unnamed Item'}</h4>
+                                  <div className="item-meta">
+                                    <span>Quantity: {item.quantity || 1}</span>
+                                    <span>Price: ₹{item.price || 0}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                        <div className="order-footer">
+                          <div className="order-total">
+                            <span>Total:</span>
+                            <span className="total-amount">₹{order.total}</span>
                           </div>
-                        ))
-                      )}
-                    </div>
-                    <div className="order-footer">
-                      <div className="order-total">
-                        <span>Total:</span>
-                        <span className="total-amount">₹{order.total}</span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        );
+                    ))
+                  )}
+                </div>
+              </div>
+            );
       case 'redeemPoints':
         return (
           <div className="content-area">
@@ -451,20 +625,20 @@ const SeProfile = () => {
             <div className="points-info">
               <div className="points-balance">
                 <h3>Current Balance</h3>
-                <p className="points">1,500 pts</p>
+                <p className="points">{redeemPoints} pts</p>
               </div>
               <div className="points-value">
                 <h3>Value</h3>
-                <p className="value">₹15.00</p>
+                <p className="value">₹{(redeemPoints / 100).toFixed(2)}</p>
               </div>
             </div>
             <div className="redeem-options">
               <h3>Redeem for:</h3>
               <div className="redeem-grid">
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹5 Off Coupon (500 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹10 Off Coupon (1000 pts)</button>
+                <button className="btn-primary"><ShoppingBag size={18} /> Request for Redeem</button>
+                {/* <button className="btn-primary"><ShoppingBag size={18} /> ₹10 Off Coupon (1000 pts)</button>
                 <button className="btn-primary"><ShoppingBag size={18} /> Free Shipping (750 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹20 Off Coupon (2000 pts)</button>
+                <button className="btn-primary"><ShoppingBag size={18} /> ₹20 Off Coupon (2000 pts)</button> */}
               </div>
             </div>
           </div>
@@ -473,46 +647,22 @@ const SeProfile = () => {
         return (
           <div className="content-area">
             <h2><Settings className="icon" /> Account Settings</h2>
-            <form className="settings-form" onSubmit={handleSubmit}>
+            <form className="settings-form">
               <div className="form-group">
-                <label htmlFor="fullName">Full Name</label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                />
+                <label htmlFor="name">Name</label>
+                <input type="text" id="name" name="name" defaultValue="Sourabh" />
               </div>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
+                <input type="email" id="email" name="email" defaultValue="Sourabh@example.com" />
               </div>
               <div className="form-group">
                 <label htmlFor="password">New Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
+                <input type="password" id="password" name="password" />
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm New Password</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                />
+                <input type="password" id="confirmPassword" name="confirmPassword" />
               </div>
               <button type="submit" className="btn-primary">Save Changes</button>
             </form>
@@ -589,6 +739,13 @@ const SeProfile = () => {
             <span>Total School</span>
           </button>
           <button
+            className={`nav-button ${activeTab === 'Total Reward Earns' ? 'active' : ''}`}
+            onClick={() => setActiveTab('Total Reward Earns')}
+          >
+            <BiSolidSchool size={24} />
+            <span>Total Reward Earns</span>
+          </button>
+          <button
             className={`nav-button ${activeTab === 'Genrate coupons' ? 'active' : ''}`}
             onClick={() => setActiveTab('Genrate coupons')}
           >
@@ -602,6 +759,10 @@ const SeProfile = () => {
             <CgShoppingCart size={24} />
             <span>My Order</span>
           </button>
+          <Link to="/checkout" className="nav-button">
+    <CgShoppingCart size={24} />
+    <span>Checkout</span>
+  </Link>
           <button
             className={`nav-button ${activeTab === 'redeemPoints' ? 'active' : ''}`}
             onClick={() => setActiveTab('redeemPoints')}
@@ -623,13 +784,13 @@ const SeProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-          {/* <button
+          <button
             className={`nav-button ${activeTab === 'manageNotifications' ? 'active' : ''}`}
             onClick={() => setActiveTab('manageNotifications')}
           >
             <Bell size={24} />
             <span>Manage Notifications</span>
-          </button> */}
+          </button>
         </nav>
         <main className="main-content">
           {renderContent()}

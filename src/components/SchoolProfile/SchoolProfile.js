@@ -24,14 +24,17 @@ const SchoolProfile = () => {
   const [couponsLoading, setCouponsLoading] = useState(false);
   const [couponsError, setCouponsError] = useState(null);
   const [rewardPoints, setRewardPoints] = useState(0);
+  const [studentRewards, setStudentRewards] = useState([]); // New state for student rewards
+  const [studentRewardsLoading, setStudentRewardsLoading] = useState(false);
+  const [studentRewardsError, setStudentRewardsError] = useState(null);
   const getImageSrc = (item) => {
-      if (item.images && item.images.length > 0) {
-        return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
-      } else if (item.image) {
-        return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
-      }
-      return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
-    };
+    if (item.images && item.images.length > 0) {
+      return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
+    } else if (item.image) {
+      return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
+    }
+    return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
+  };
   const [formData, setFormData] = useState({
     schoolName: '',
     email: '',
@@ -92,16 +95,30 @@ const SchoolProfile = () => {
         }
 
         if (schoolId) {
-          const pointsResponse = await axios.get(`http://localhost:5000/api/schools/${schoolId}/points`);
-          console.log("Reward Points:", pointsResponse.data.reward_points);
+          // Fetch reward points
+          const pointsResponse = await axios.get(`http://localhost:5000/api/schools/user/${storedUser.id}/points`);
           setRewardPoints(pointsResponse.data.reward_points);
+
+          // Fetch student rewards
+          setStudentRewardsLoading(true);
+          try {
+            const rewardsResponse = await axios.get(`http://localhost:5000/api/schools/${schoolId}/student-rewards`);
+            setStudentRewards(rewardsResponse.data);
+            setStudentRewardsError(null);
+          } catch (error) {
+            console.error("Error fetching student rewards:", error);
+            setStudentRewardsError('Failed to load student rewards. Please try again later.');
+          } finally {
+            setStudentRewardsLoading(false);
+          }
         } else {
-          console.log("No schoolId found, setting points to 0");
           setRewardPoints(0);
+          setStudentRewards([]);
         }
       } catch (error) {
-        console.error("Error fetching reward points:", error);
+        console.error("Error fetching data:", error);
         setRewardPoints(0);
+        setStudentRewards([]);
       }
 
       // Fetch orders
@@ -335,6 +352,38 @@ const SchoolProfile = () => {
             </div>
           </div>
         );
+        case 'rewardPoints':
+        return (
+          <div className="content-area">
+            <h2><Gift className="icon" /> Total Reward Points</h2>
+            {studentRewardsLoading ? (
+              <p>Loading student rewards...</p>
+            ) : studentRewardsError ? (
+              <p>{studentRewardsError}</p>
+            ) : (
+              <div className="Student-table">
+                <div className="table-header">
+                  <span className="table-column">Student Name</span>
+                  <span className="table-column">Order Amount</span>
+                  <span className="table-column">Points Awarded</span>
+                  <span className="table-column">Purchase Date</span>
+                </div>
+                {studentRewards.length === 0 ? (
+                  <p>No rewards data available</p>
+                ) : (
+                  studentRewards.map((data, index) => (
+                    <div key={index} className="table-row">
+                      <span className="table-column">{data.student_name}</span>
+                      <span className="table-column">₹{data.order_amount}</span>
+                      <span className="table-column">{data.points_awarded} pts</span>
+                      <span className="table-column">{data.purchase_date}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        );
       case 'settings':
         return (
           <div className="content-area">
@@ -428,7 +477,9 @@ const SchoolProfile = () => {
             <button className="btn-primary">Save Preferences</button>
           </div>
         );
-       case 'My order':
+        
+        
+        case 'My order':
           return (
             <div className="content-area">
               <h2><ShoppingBag className="icon" /> My Orders</h2>
@@ -502,8 +553,7 @@ const SchoolProfile = () => {
             </div>
           );
 
-
-      case 'total Student':
+      // case 'total Student':
         return (
           <div className="content-area">
             <h2><FaChildReaching className="icon" /> Total Student</h2>
@@ -553,6 +603,13 @@ const SchoolProfile = () => {
           >
             <Gift size={24} />
             <span>Redeem Points</span>
+          </button>
+          <button
+            className={`nav-button ${activeTab === 'rewardPoints' ? 'active' : ''}`}
+            onClick={() => setActiveTab('rewardPoints')}
+          >
+            <Gift size={24} />
+            <span>Total Reward Points</span>
           </button>
           {/* <button
             className={`nav-button ${activeTab === 'total Student' ? 'active' : ''}`}
