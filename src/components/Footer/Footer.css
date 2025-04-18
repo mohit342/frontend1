@@ -126,6 +126,7 @@
   justify-content: flex-start; /* Align left for consistency */
   gap: clamp(0.75rem, 2vw, 1rem);
   margin-top: clamp(0.75rem, 2vw, 1rem);
+  margin-left: 35px;
 }
 
 .social-icons a {
