@@ -340,7 +340,6 @@ const Header = () => {
             onChange={(e) => setLocalSearchTerm(e.target.value)}
             onKeyUp={handleSearch}
           />
-          <button className="search-button">🔍</button>
         </div>
 
         {user ? (

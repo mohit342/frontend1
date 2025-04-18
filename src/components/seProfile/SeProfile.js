@@ -181,11 +181,15 @@ const SeProfile = () => {
     const fetchOrders = async () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
       if (!storedUser || !storedUser.email) return;
-
+  
       setOrdersLoading(true);
       try {
         const response = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
-        const data = await response.json();
+        let data = await response.json();
+  
+        // Sort orders by order_id in descending order (higher IDs first)
+        data = data.sort((a, b) => b.id - a.id);
+  
         setOrders(data);
         setOrdersError(null);
       } catch (error) {
@@ -195,7 +199,7 @@ const SeProfile = () => {
         setOrdersLoading(false);
       }
     };
-
+  
     fetchOrders();
   }, []);
 
@@ -305,6 +309,11 @@ const SeProfile = () => {
 
     fetchWishlist();
   }, []);
+   useEffect(() => {
+      if (tabFromUrl) {
+        setActiveTab(tabFromUrl);
+      }
+    }, [tabFromUrl]);
 
   // Generate coupon
   const generateCoupon = async () => {
@@ -312,33 +321,34 @@ const SeProfile = () => {
       alert("Please select a school.");
       return;
     }
-
+  
     const requestBody = {
       schoolId: selectedSchool,
       seEmployeeId: user.userId,
-      discountPercentage: 20,
+      discountPercentage: 10, // Add this (or make it dynamic via UI)
       validFrom: new Date().toISOString().split("T")[0],
       validUntil: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
       maxUses: 999999
     };
-
+  
     try {
       const response = await fetch("http://localhost:5000/api/coupons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
-        alert(data.error);
+        alert(data.reason || data.error);
       } else {
         alert(`Coupons Generated!\nSchool Coupon: ${data.schoolCouponCode}\nStudent Coupon: ${data.studentCouponCode}`);
-        fetchSchools();
+        fetchSchools(); // Refresh school list
       }
     } catch (error) {
       console.error("Error generating coupon:", error);
+      alert("Failed to generate coupon. Please try again.");
     }
   };
 
@@ -647,28 +657,52 @@ const SeProfile = () => {
         return (
           <div className="content-area">
             <h2><Settings className="icon" /> Account Settings</h2>
-            <form className="settings-form">
+            <form className="settings-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" defaultValue="Sourabh" />
+                <label htmlFor="fullName">Full Name</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
-                <input type="email" id="email" name="email" defaultValue="Sourabh@example.com" />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="password">New Password</label>
-                <input type="password" id="password" name="password" />
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
               </div>
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm New Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                />
               </div>
               <button type="submit" className="btn-primary">Save Changes</button>
             </form>
           </div>
         );
-      case 'manageNotifications':
+      // case 'manageNotifications':
         return (
           <div className="content-area">
             <h2><Bell className="icon" /> Manage Notifications</h2>
@@ -759,10 +793,7 @@ const SeProfile = () => {
             <CgShoppingCart size={24} />
             <span>My Order</span>
           </button>
-          <Link to="/checkout" className="nav-button">
-    <CgShoppingCart size={24} />
-    <span>Checkout</span>
-  </Link>
+          
           <button
             className={`nav-button ${activeTab === 'redeemPoints' ? 'active' : ''}`}
             onClick={() => setActiveTab('redeemPoints')}
@@ -784,13 +815,13 @@ const SeProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-          <button
+          {/* <button
             className={`nav-button ${activeTab === 'manageNotifications' ? 'active' : ''}`}
             onClick={() => setActiveTab('manageNotifications')}
           >
             <Bell size={24} />
             <span>Manage Notifications</span>
-          </button>
+          </button> */}
         </nav>
         <main className="main-content">
           {renderContent()}

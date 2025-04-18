@@ -124,6 +124,8 @@ body {
   padding: 30px;
   border-radius: 15px;
   box-shadow: var(--shadow);
+  overflow: visible; /* Ensure parent doesn’t hide content */
+  padding: 0;
 }
 
 .content-area h2 {
@@ -264,6 +266,38 @@ body {
 }
 
 .coupon-list {
+  display: flex;
+  flex-wrap: wrap; /* Allow items to wrap to new lines */
+  gap: 1rem; /* Space between coupons */
+  padding: 1rem; /* Padding around the container */
+  width: 100%; /* Ensure full width */
+  box-sizing: border-box; /* Include padding in width calculation */
+  min-height: 0; /* Prevent height collapse */
+  overflow: visible; /* Ensure no hidden overflow */
+}
+
+.coupon-item {
+  flex: 1 1 calc(33.33% - 1rem); /* Approx 3 items per row, adjusted for gap */
+  max-width: 300px; /* Limit width for readability */
+  background: #fff; /* Ensure background is visible */
+  border: 1px solid #ddd; /* Optional: Add border for visibility */
+  border-radius: 8px; /* Match existing card style */
+  padding: 1rem; /* Internal padding */
+  box-sizing: border-box; /* Include padding in width */
+  margin-bottom: 1rem; /* Space between rows */
+  opacity: 1; /* Ensure visibility */
+}
+
+.content-area {
+  width: 100%; /* Ensure content area takes full space */
+  max-width: 100%; /* Prevent width constraint */
+  overflow: visible; /* Prevent overflow hiding */
+  position: relative; /* Ensure proper stacking */
+  z-index: 1; /* Ensure above other elements */
+}
+
+
+/* .coupon-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 25px;
@@ -274,7 +308,7 @@ body {
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
+} */
 
 .coupon-blue {
   background: linear-gradient(135deg, #4a90e2, #5ca0eb);

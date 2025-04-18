@@ -4,7 +4,7 @@
   background-size: cover;
   background-position: center;
   color: #1a2d4e;
-  padding: clamp(2rem, 5vw, 3rem) clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
   position: relative;
   min-height: clamp(60vh, 80vw, 80vh);
   display: flex;
@@ -15,87 +15,123 @@
 
 .testimonials h1 {
   font-size: clamp(1.8rem, 5vw, 2.5rem);
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  color: #1e3a8a;
 }
 
 /* Testimonial Card */
 .testimonial {
   background: #e3f2ff;
   color: #1e3a8a;
-  border-radius: 10px;
-  padding: clamp(1rem, 3vw, 1.5rem);
-  max-width: clamp(300px, 80vw, 500px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  max-width: clamp(400px, 100vw, 550px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   position: relative;
   margin: 0 auto;
+  z-index: 1;
 }
 
 .testimonial img {
-  width: clamp(80px, 20vw, 120px);
-  height: clamp(80px, 20vw, 120px);
+  width: clamp(100px, 30vw, 120px);
+  height: clamp(100px, 30vw, 120px);
   border-radius: 50%;
-  margin-bottom: clamp(0.5rem, 2vw, 0.75rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  border: 4px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .testimonial h2 {
   font-size: clamp(1.2rem, 3vw, 1.5rem);
-  margin: clamp(0.5rem, 2vw, 0.75rem) 0;
+  margin: clamp(0.5rem, 1.5vw, 1rem) 0;
+  color: #1e3a8a;
 }
 
 .testimonial h4 {
-  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
   color: #666;
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
 .testimonial p {
-  font-size: clamp(0.8rem, 2vw, 1rem);
-  line-height: 1.5;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  line-height: 1.6;
+  color: #1e3a8a;
 }
 
 /* Decorative Dots */
+.testimonials-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .dots {
   position: absolute;
-  top: clamp(0.5rem, 2vw, 0.75rem);
-  left: clamp(0.5rem, 2vw, 0.75rem);
-  display: grid;
-  grid-template-columns: repeat(5, clamp(6px, 1.5vw, 8px));
-  grid-gap: clamp(3px, 1vw, 5px);
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  z-index: 2;
 }
 
 .dot {
-  width: clamp(6px, 1.5vw, 8px);
-  height: clamp(6px, 1.5vw, 8px);
-  background-color: #34d399;
+  width: clamp(8px, 1.5vw, 10px);
+  height: clamp(8px, 1.5vw, 10px);
+  background-color: #ccc;
   border-radius: 50%;
-}
-
-/* Navigation Buttons */
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: clamp(200px, 60vw, 400px);
-  margin-top: clamp(1rem, 3vw, 1.5rem);
-}
-
-.nav-button1 {
-  background: #e3f2ff;
-  border: none;
   cursor: pointer;
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  color: #333;
-  padding: clamp(0.5rem, 2vw, 0.75rem);
-  border-radius: 5px;
   transition: background-color 0.3s ease;
 }
 
-.nav-button1:hover {
-  background-color: #d1e8ff;
+.dot.active {
+  background-color: #34d399;
 }
 
-.nav-button1:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+/* Navigation Buttons */
+.testimonial-nav-buttons {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  transform: translateY(-50%);
+}
+
+.arrow-button {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #1e3a8a;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.arrow-button:hover {
+  background-color: #1e3a8a;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.arrow-button.left {
+  margin-left: -1rem;
+}
+
+.arrow-button.right {
+  margin-right: -1rem;
 }
 
 /* Optional Illustration and Logo */
@@ -106,7 +142,7 @@
   transform: translateY(-50%);
   width: clamp(80px, 20vw, 120px);
   height: auto;
-  display: none; /* Hidden by default, can be enabled if needed */
+  display: none;
 }
 
 .logo {
@@ -115,7 +151,7 @@
   bottom: clamp(1rem, 3vw, 1.5rem);
   width: clamp(60px, 15vw, 80px);
   height: auto;
-  display: none; /* Hidden by default, can be enabled if needed */
+  display: none;
 }
 
 /* Media Queries for Responsiveness */
@@ -125,17 +161,13 @@
   }
 
   .testimonial {
-    max-width: clamp(280px, 75vw, 450px);
-  }
-
-  .nav-buttons {
-    width: clamp(180px, 55vw, 350px);
+    max-width: clamp(280px, 75vw, 400px);
   }
 }
 
 @media (max-width: 992px) {
   .testimonials {
-    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(0.75rem, 2vw, 1rem);
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(0.75rem, 2vw, 1.5rem);
   }
 
   .testimonials h1 {
@@ -143,8 +175,8 @@
   }
 
   .testimonial img {
-    width: clamp(70px, 18vw, 100px);
-    height: clamp(70px, 18vw, 100px);
+    width: clamp(70px, 18vw, 90px);
+    height: clamp(70px, 18vw, 90px);
   }
 
   .testimonial h2 {
@@ -153,11 +185,7 @@
 
   .testimonial h4,
   .testimonial p {
-    font-size: clamp(0.7rem, 1.8vw, 0.9rem);
-  }
-
-  .nav-buttons {
-    width: clamp(160px, 50vw, 300px);
+    font-size: clamp(0.8rem, 1.8vw, 1rem);
   }
 }
 
@@ -167,38 +195,47 @@
   }
 
   .testimonial {
-    max-width: clamp(250px, 70vw, 400px);
-    padding: clamp(0.75rem, 2vw, 1rem);
+    max-width: clamp(250px, 70vw, 350px);
+    padding: clamp(1rem, 2vw, 1.5rem);
   }
 
   .dots {
-    grid-template-columns: repeat(5, clamp(5px, 1.2vw, 6px));
-    grid-gap: clamp(2px, 0.8vw, 4px);
+    top: -1.5rem;
+    gap: clamp(0.4rem, 0.8vw, 0.8rem);
   }
 
   .dot {
-    width: clamp(5px, 1.2vw, 6px);
-    height: clamp(5px, 1.2vw, 6px);
+    width: clamp(6px, 1.2vw, 8px);
+    height: clamp(6px, 1.2vw, 8px);
   }
 
-  .nav-button1 {
-    font-size: clamp(0.8rem, 2.5vw, 1.2rem);
-    padding: clamp(0.4rem, 1.5vw, 0.6rem);
+  .arrow-button {
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    width: clamp(32px, 8vw, 40px);
+    height: clamp(32px, 8vw, 40px);
+  }
+
+  .arrow-button.left {
+    margin-left: -0.8rem;
+  }
+
+  .arrow-button.right {
+    margin-right: -0.8rem;
   }
 }
 
 @media (max-width: 576px) {
   .testimonials {
     min-height: clamp(30vh, 50vw, 50vh);
-    padding: clamp(1rem, 3vw, 1.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
+    padding: clamp(1rem, 3vw, 1.5rem) clamp(0.5rem, 1.5vw, 1rem);
   }
 
   .testimonials h1 {
-    font-size: clamp(1.2rem, 3.5vw, 1.8rem);
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
   }
 
   .testimonial {
-    max-width: clamp(200px, 90vw, 350px);
+    max-width: clamp(200px, 90vw, 300px);
   }
 
   .testimonial img {
@@ -212,20 +249,20 @@
 
   .testimonial h4,
   .testimonial p {
-    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+    font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   }
 
-  .nav-buttons {
-    width: clamp(120px, 80vw, 250px);
+  .arrow-button {
+    width: clamp(28px, 7vw, 36px);
+    height: clamp(28px, 7vw, 36px);
   }
 
-  .nav-button1 {
-    font-size: clamp(0.7rem, 2vw, 1rem);
+  .arrow-button.left {
+    margin-left: -0.6rem;
   }
 
-  .illustration,
-  .logo {
-    display: none;
+  .arrow-button.right {
+    margin-right: -0.6rem;
   }
 }
 
@@ -235,20 +272,16 @@
   }
 
   .testimonial {
-    max-width: clamp(180px, 85vw, 300px);
+    max-width: clamp(180px, 85vw, 250px);
   }
 
   .dots {
-    grid-template-columns: repeat(5, clamp(4px, 1vw, 5px));
-    grid-gap: clamp(1px, 0.5vw, 3px);
+    top: -1rem;
+    gap: clamp(0.3rem, 0.6vw, 0.5rem);
   }
 
   .dot {
-    width: clamp(4px, 1vw, 5px);
-    height: clamp(4px, 1vw, 5px);
-  }
-
-  .nav-buttons {
-    width: clamp(100px, 75vw, 200px);
+    width: clamp(5px, 1vw, 6px);
+    height: clamp(5px, 1vw, 6px);
   }
 }

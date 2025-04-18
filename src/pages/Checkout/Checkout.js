@@ -43,27 +43,38 @@ const Checkout = () => {
       if (user.role !== 'se') {
         const fetchCoupons = async () => {
           try {
-            const response = await axios.get(`http://localhost:5000/api/coupons/user/${user.id}`);
-            const enrichedCoupons = await Promise.all(
-              response.data.map(async (coupon) => {
-                try {
-                  const validationResponse = await axios.post("http://localhost:5000/api/coupons/validate", {
-                    code: coupon.code,
-                    userId: user.id,
-                    userType: user.role,
-                  });
-                  return {
-                    ...coupon,
-                    school_name: validationResponse.data.school_name || 'Unknown School',
-                  };
-                } catch (error) {
-                  return { ...coupon, school_name: 'Unknown School' };
-                }
-              })
-            );
-            setAvailableCoupons(enrichedCoupons);
+            // Fetch user-specific coupons
+            const userCouponsResponse = await axios.get(`http://localhost:5000/api/coupons/user/${user.id}`);
+            const userCoupons = userCouponsResponse.data.map(coupon => {
+              console.log('User coupon data:', coupon);
+              return {
+                ...coupon,
+                school_name: coupon.school_name || 'Unknown School',
+                type: 'user',
+              };
+            });
+
+            // Fetch special coupons
+            let specialCoupons = [];
+            try {
+              const specialCouponsResponse = await axios.get(`http://localhost:5000/api/couponall/user/${user.id}`);
+              specialCoupons = specialCouponsResponse.data.map(coupon => {
+                console.log('Special coupon data:', coupon);
+                return {
+                  ...coupon,
+                  school_name: 'Universal',
+                  type: 'special',
+                };
+              });
+            } catch (error) {
+              console.warn("Failed to fetch special coupons:", error.message);
+            }
+
+            // Combine and set available coupons
+            setAvailableCoupons([...userCoupons, ...specialCoupons]);
           } catch (error) {
             console.error("Error fetching coupons:", error);
+            setAvailableCoupons([]);
           }
         };
         fetchCoupons();
@@ -146,17 +157,23 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      console.log("Applying coupon:", { code: coupon, userId: user.id, userType: user.role });
       const response = await axios.post("http://localhost:5000/api/coupons/validate", {
         code: coupon,
         userId: user.id,
         userType: user.role,
       });
+      console.log("Validation response:", response.data);
 
       setAdditionalDiscount(response.data.discount_percentage);
       setCouponApplied(true);
-      setCouponSuccess(`Coupon applied! You received ${response.data.discount_percentage}% discount from ${response.data.school_name}.`);
+      setCouponSuccess(`Coupon applied! Successfully`);
     } catch (error) {
-      console.error("Coupon validation error:", error.response?.data || error.message);
+      console.error("Coupon validation error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       setCouponError(error.response?.data?.error || "Failed to validate coupon");
       setCouponApplied(false);
       setAdditionalDiscount(0);
@@ -204,9 +221,8 @@ const Checkout = () => {
     }
     if (!formData.city.trim()) newErrors.city = "City is required";
     if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^\d{10}$/.test(formData.phone)) {
+    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+    else if (!/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = "Phone number must be 10 digits";
     }
 
@@ -252,9 +268,9 @@ const Checkout = () => {
       setCoupon("");
       setCouponApplied(false);
       setAdditionalDiscount(0);
-      setCartItems([]); // Clear cart items in context
-      localStorage.removeItem("cartItems"); // Clear local storage
-      sessionStorage.removeItem("guest_cart"); // Clear guest cart in session storage
+      setCartItems([]);
+      localStorage.removeItem("cartItems");
+      sessionStorage.removeItem("guest_cart");
     } catch (error) {
       alert(error.response?.data?.error || "Failed to process order");
     } finally {
@@ -335,7 +351,7 @@ const Checkout = () => {
                         <option value="">Select a coupon</option>
                         {availableCoupons.map((c) => (
                           <option key={c.code} value={c.code}>
-                            {c.code} ({c.discount_percentage}% off - {c.school_name})
+                            {c.name || c.code} ({c.discount_percentage}% off - {c.type === 'special' ? 'Special Offer' : c.school_name})
                           </option>
                         ))}
                       </select>

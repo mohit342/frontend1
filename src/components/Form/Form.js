@@ -110,7 +110,7 @@ const Form = () => {
                                 />
                             </div>
                             <div className="form-group">
-                                <label>Company Name</label>
+                                <label>organization name</label>
                                 <input
                                     type="text"
                                     name="company"

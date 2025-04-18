@@ -27,8 +27,11 @@ const StudentProfile = () => {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
   const [coupons, setCoupons] = useState([]);
+  const [specialCoupons, setSpecialCoupons] = useState([]);
   const [couponsLoading, setCouponsLoading] = useState(false);
   const [couponsError, setCouponsError] = useState(null);
+  const [specialCouponsLoading, setSpecialCouponsLoading] = useState(false);
+  const [specialCouponsError, setSpecialCouponsError] = useState(null);
   const getImageSrc = (item) => {
     if (item.images && item.images.length > 0) {
       return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
@@ -37,7 +40,7 @@ const StudentProfile = () => {
     }
     return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
   };
-  
+
   const [rewardPoints, setRewardPoints] = useState(0); // School reward points
 
   // Function to generate slug
@@ -74,14 +77,14 @@ const StudentProfile = () => {
       alert('Please log in to apply a coupon.');
       return;
     }
-  
+
     try {
       const response = await axios.post('http://localhost:5000/api/coupons/validate', {
         code: couponCode,
         userId: storedUser.id,
         userType: 'student',
       });
-  
+
       if (response.data.valid) {
         alert(`Coupon ${couponCode} applied successfully! Discount: ${response.data.discount_percentage}%`);
         // Add logic here to apply the discount to the cart or wherever needed
@@ -91,11 +94,12 @@ const StudentProfile = () => {
       alert(error.response?.data?.error || 'Failed to apply coupon.');
     }
   };
+
   useEffect(() => {
     const fetchStudentDetailsAndData = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user'));
       if (!storedUser || !storedUser.id) return;
-  
+
       setUser({
         full_name: storedUser.full_name || `${storedUser.firstName} ${storedUser.lastName || ''}`,
         email: storedUser.email || '',
@@ -109,16 +113,17 @@ const StudentProfile = () => {
         password: '',
         confirmPassword: '',
       });
-  
-        // Fetch student coupons
-        try{
-          const pointsResponse = await axios.get(`http://localhost:5000/api/student-school-points/${storedUser.id}`);
-          setRewardPoints(pointsResponse.data.reward_points || 0);
+
+      // Fetch student coupons
+      setCouponsLoading(true);
+      try {
+        const pointsResponse = await axios.get(`http://localhost:5000/api/student-school-points/${storedUser.id}`);
+        setRewardPoints(pointsResponse.data.reward_points || 0);
       } catch (error) {
         console.error("Error fetching school reward points:", error);
         setRewardPoints(0);
-    } 
-    setWishlistLoading(true);
+      }
+      setWishlistLoading(true);
       try {
         const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
         const formattedWishlist = wishlistResponse.data.map((item) => ({
@@ -138,7 +143,9 @@ const StudentProfile = () => {
       setOrdersLoading(true);
       try {
         const ordersResponse = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
-        const ordersData = await ordersResponse.json();
+        let ordersData = await ordersResponse.json();
+        ordersData = ordersData.sort((a, b) => b.id - a.id);
+
         setOrders(ordersData);
         setOrdersError(null);
       } catch (error) {
@@ -148,7 +155,7 @@ const StudentProfile = () => {
         setOrdersLoading(false);
       }
 
-      // Fetch coupons
+      // Fetch user-specific coupons
       setCouponsLoading(true);
       try {
         const couponsResponse = await axios.get(`http://localhost:5000/api/coupons/user/${storedUser.id}`);
@@ -161,46 +168,60 @@ const StudentProfile = () => {
         setCouponsLoading(false);
       }
     };
-  
+
     fetchStudentDetailsAndData();
   }, []);
 
   useEffect(() => {
-    const fetchCoupons = async () => {
+    const fetchSpecialCoupons = async () => {
+      setSpecialCouponsLoading(true);
       try {
         const storedUser = JSON.parse(localStorage.getItem('user'));
-  
+
         console.log("Stored User Data:", storedUser); // 🔍 Check full user data
-  
-        if (storedUser) {
-          setUser({
-            full_name: storedUser.full_name || '',
-            email: storedUser.email || '',
-            role: storedUser.role || '',
-            id: storedUser.id || '' // Store userId
-          });
+
+        if (!storedUser || !storedUser.id) {
+          setSpecialCouponsError("User not found. Please log in.");
+          return;
         }
-        console.log("Fetching coupons for userId:", storedUser.id); // ✅ Debug log
-  
-        const response = await axios.get(`http://localhost:5000/api/coupons/user/${storedUser.id}`);
-  
-        console.log("API Response:", response.data); // ✅ Debug log
-  
-        setCoupons(response.data);
+
+        console.log("Fetching special coupons for userId:", storedUser.id); // ✅ Debug userId
+
+        // Fetch only universal coupons from couponsall table
+        let specialCoupons = [];
+        try {
+          console.log("Requesting universal coupons for URL:", `http://localhost:5000/api/couponall/user/${storedUser.id}`);
+          const specialCouponsResponse = await axios.get(`http://localhost:5000/api/couponall/user/${storedUser.id}`);
+          specialCoupons = specialCouponsResponse.data.map(coupon => ({
+            code: coupon.code,
+            name: coupon.name, // Ensure name is included
+            discount_percentage: coupon.discount_percentage,
+            valid_from: coupon.valid_from,
+            valid_until: coupon.valid_until,
+            current_uses: coupon.current_uses || 0,
+            max_uses: coupon.max_uses,
+          }));
+        } catch (error) {
+          console.warn("Failed to fetch special coupons:", error.message);
+        }
+
+        console.log("Special Coupons:", specialCoupons); // ✅ Debug special coupons
+
+        setSpecialCoupons(specialCoupons);
+        setSpecialCouponsError(specialCoupons.length === 0 ? "No special coupons available." : null);
       } catch (error) {
-        console.error("Error fetching coupons:", error);
-        setCouponsError("Failed to load coupons. Please try again later.");
+        console.error("Error fetching special coupons:", error);
+        setSpecialCouponsError("Failed to load special coupons. Please try again later.");
       } finally {
-        setCouponsLoading(false);
+        setSpecialCouponsLoading(false);
       }
     };
-  
-    fetchCoupons();
-  }, []);
-  
-  
-  
-  
+
+    if (activeTab === 'specialCoupons') {
+      fetchSpecialCoupons();
+    }
+  }, [activeTab]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -321,43 +342,76 @@ const StudentProfile = () => {
             <button className="btn-primary"><Zap size={18} /> Add New Address</button>
           </div>
         );
-        case 'coupons':
-      return (
-        <div className="content-area">
-          <h2><Ticket className="icon" /> My Student Coupons</h2>
-          {couponsLoading ? (
-            <p>Loading coupons...</p>
-          ) : couponsError ? (
-            <p>{couponsError}</p>
-          ) : (
-            <div className="coupon-list">
-              {coupons.length === 0 ? (
-                <p>No student coupons available</p>
-              ) : (
-                coupons.map((coupon, index) => (
-                  <div key={index} className="coupon-item">
-                    <h3>{coupon.code}</h3>
-                    <p className="discount">{coupon.discount_percentage}% off</p>
-                    <p className="expiry">
-                      Valid: {new Date(coupon.valid_from).toLocaleDateString()} -{' '}
-                      {new Date(coupon.valid_until).toLocaleDateString()}
-                    </p>
-                    <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
-                    <button
-                      className="btn-secondary"
-                      onClick={() => handleApplyCoupon(coupon.code)}
-                    >
-                      Apply Coupon
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      );
-
-   
+      case 'coupons':
+        return (
+          <div className="content-area">
+            <h2><Ticket className="icon" /> My Student Coupons</h2>
+            {couponsLoading ? (
+              <p>Loading coupons...</p>
+            ) : couponsError ? (
+              <p>{couponsError}</p>
+            ) : (
+              <div className="coupon-list">
+                {coupons.length === 0 ? (
+                  <p>No student coupons available</p>
+                ) : (
+                  <>
+                    {console.log("Rendering coupons:", coupons)}
+                    {coupons.map((coupon, index) => (
+                      <div key={index} className="coupon-item" data-index={index}>
+                        <h3>{coupon.code}</h3>
+                        <p className="discount">{coupon.discount_percentage}% off</p>
+                        <p className="expiry">
+                          Valid: {new Date(coupon.valid_from).toLocaleDateString()} -{' '}
+                          {new Date(coupon.valid_until).toLocaleDateString()}
+                        </p>
+                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                        <button
+                          className="btn-secondary"
+                          onClick={() => handleApplyCoupon(coupon.code)}
+                        >
+                          Apply Coupon
+                        </button>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      case 'specialCoupons':
+        return (
+          <div className="content-area">
+            <h2><Ticket className="icon" /> Special Coupons</h2>
+            {specialCouponsLoading ? (
+              <p>Loading special coupons...</p>
+            ) : specialCouponsError ? (
+              <p>{specialCouponsError}</p>
+            ) : (
+              <div className="coupon-list">
+                {specialCoupons.length === 0 ? (
+                  <p>No special coupons available</p>
+                ) : (
+                  <>
+                    {console.log("Rendering special coupons:", specialCoupons)}
+                    {specialCoupons.map((coupon, index) => (
+                      <div key={index} className="coupon-item" data-index={index}>
+                        <h3>{coupon.name || coupon.code}</h3>
+                        <p className="code">Code: {coupon.code}</p>
+                        <p className="discount">{coupon.discount_percentage}% off</p>
+                        <p className="expiry">
+                          Valid until: {new Date(coupon.valid_until).toLocaleDateString()}
+                        </p>
+                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
       case 'My order':
         return (
           <div className="content-area">
@@ -431,7 +485,6 @@ const StudentProfile = () => {
             </div>
           </div>
         );
-      
       case 'settings':
         return (
           <div className="content-area">
@@ -491,62 +544,6 @@ const StudentProfile = () => {
             </form>
           </div>
         );
-        return (
-          <div className="content-area">
-            <h2><ShoppingBag className="icon" /> My Orders</h2>
-            <div className="orders-list">
-              {orders.length === 0 ? (
-                <p>No orders found.</p>
-              ) : (
-                orders.map((order, index) => (
-                  <div key={index} className="order-card">
-                    <div className="order-header">
-                      <div className="order-meta">
-                        <span className="order-id">Order #: {order.id}</span>
-                        <span className="order-date">{order.createdAt}</span>
-                      </div>
-                    </div>
-                    <div className="order-items">
-                      {Array.isArray(order.items) ?
-                        order.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="order-item">
-                            <img src={item.image} alt={item.name} className="item-image" />
-                            <div className="item-details">
-                              <h4>{item.name}</h4>
-                              <div className="item-meta">
-                                <span>Quantity: {item.quantity}</span>
-                                <span>Price: ₹{item.price}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                        :
-                        JSON.parse(order.items).map((item, itemIndex) => (
-                          <div key={itemIndex} className="order-item">
-                            <img src={item.image} alt={item.name} className="item-image" />
-                            <div className="item-details">
-                              <h4>{item.name}</h4>
-                              <div className="item-meta">
-                                <span>Quantity: {item.quantity}</span>
-                                <span>Price: ₹{item.price}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      }
-                    </div>
-                    <div className="order-footer">
-                      <div className="order-total">
-                        <span>Total:</span>
-                        <span className="total-amount">₹{order.total}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        );
       case 'manageNotifications':
         return (
           <div className="content-area">
@@ -604,7 +601,7 @@ const StudentProfile = () => {
             <h1>Student Dashboard</h1>
             <div className="user-details">
               <span className="user-name">{user.full_name}</span>
-              <span className="user-points">School Points: {rewardPoints} pts</span>
+              {/* <span className="user-points">School Points: {rewardPoints} pts</span> */}
             </div>
           </div>
         )}
@@ -633,13 +630,19 @@ const StudentProfile = () => {
             <span>Coupons</span>
           </button>
           <button
+            className={`nav-button ${activeTab === 'specialCoupons' ? 'active' : ''}`}
+            onClick={() => setActiveTab('specialCoupons')}
+          >
+            <Ticket size={24} />
+            <span>Special Coupon</span>
+          </button>
+          <button
             className={`nav-button ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
             <Settings size={24} />
             <span>Settings</span>
           </button>
-         
         </nav>
         <main className="main-content">
           {renderContent()}

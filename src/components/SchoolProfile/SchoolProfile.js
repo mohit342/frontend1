@@ -27,6 +27,10 @@ const SchoolProfile = () => {
   const [studentRewards, setStudentRewards] = useState([]); // New state for student rewards
   const [studentRewardsLoading, setStudentRewardsLoading] = useState(false);
   const [studentRewardsError, setStudentRewardsError] = useState(null);
+  const [specialCouponsLoading, setSpecialCouponsLoading] = useState(false);
+  const [specialCouponsError, setSpecialCouponsError] = useState(null);
+  const [specialCoupons, setSpecialCoupons] = useState([]);
+
   const getImageSrc = (item) => {
     if (item.images && item.images.length > 0) {
       return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
@@ -125,7 +129,9 @@ const SchoolProfile = () => {
       setOrdersLoading(true);
       try {
         const ordersResponse = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
-        const ordersData = await ordersResponse.json();
+        // const ordersData = await ordersResponse.json();
+        let ordersData = await ordersResponse.json();
+        ordersData = ordersData.sort((a, b) => b.id - a.id);
         setOrders(ordersData);
         setOrdersError(null);
       } catch (error) {
@@ -169,6 +175,55 @@ const SchoolProfile = () => {
 
     fetchUserDetailsAndData();
   }, []);
+  useEffect(() => {
+    const fetchSpecialCoupons = async () => {
+      setSpecialCouponsLoading(true);
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+
+        console.log("Stored User Data:", storedUser); // 🔍 Check full user data
+
+        if (!storedUser || !storedUser.id) {
+          setSpecialCouponsError("User not found. Please log in.");
+          return;
+        }
+
+        console.log("Fetching special coupons for userId:", storedUser.id); // ✅ Debug userId
+
+        // Fetch only universal coupons from couponsall table
+        let specialCoupons = [];
+        try {
+          console.log("Requesting universal coupons for URL:", `http://localhost:5000/api/couponall/user/${storedUser.id}`);
+          const specialCouponsResponse = await axios.get(`http://localhost:5000/api/couponall/user/${storedUser.id}`);
+          specialCoupons = specialCouponsResponse.data.map(coupon => ({
+            code: coupon.code,
+            name: coupon.name, // Ensure name is included
+            discount_percentage: coupon.discount_percentage,
+            valid_from: coupon.valid_from,
+            valid_until: coupon.valid_until,
+            current_uses: coupon.current_uses || 0,
+            max_uses: coupon.max_uses,
+          }));
+        } catch (error) {
+          console.warn("Failed to fetch special coupons:", error.message);
+        }
+
+        console.log("Special Coupons:", specialCoupons); // ✅ Debug special coupons
+
+        setSpecialCoupons(specialCoupons);
+        setSpecialCouponsError(specialCoupons.length === 0 ? "No special coupons available." : null);
+      } catch (error) {
+        console.error("Error fetching special coupons:", error);
+        setSpecialCouponsError("Failed to load special coupons. Please try again later.");
+      } finally {
+        setSpecialCouponsLoading(false);
+      }
+    };
+
+    if (activeTab === 'specialCoupons') {
+      fetchSpecialCoupons();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (tabFromUrl) {
@@ -268,6 +323,38 @@ const SchoolProfile = () => {
             )}
           </div>
         );
+      case 'specialCoupons':
+        return (
+          <div className="content-area">
+            <h2><Ticket className="icon" /> Special Coupons</h2>
+            {specialCouponsLoading ? (
+              <p>Loading special coupons...</p>
+            ) : specialCouponsError ? (
+              <p>{specialCouponsError}</p>
+            ) : (
+              <div className="coupon-list">
+                {specialCoupons.length === 0 ? (
+                  <p>No special coupons available</p>
+                ) : (
+                  <>
+                    {console.log("Rendering special coupons:", specialCoupons)}
+                    {specialCoupons.map((coupon, index) => (
+                      <div key={index} className="coupon-item" data-index={index}>
+                        <h3>{coupon.name || coupon.code}</h3>
+                        <p className="code">Code: {coupon.code}</p>
+                        <p className="discount">{coupon.discount_percentage}% off</p>
+                        <p className="expiry">
+                          Valid until: {new Date(coupon.valid_until).toLocaleDateString()}
+                        </p>
+                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        );
       case 'addressBook':
         return (
           <div className="content-area">
@@ -318,7 +405,7 @@ const SchoolProfile = () => {
                           {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
                         <p className="type">{isStudentCoupon ? 'Student Coupon' : 'School Coupon'}</p>
-                        <button className="btn-secondary">Use Coupon</button>
+                        {/* <button className="btn-secondary">Use Coupon</button> */}
                       </div>
                     );
                   })
@@ -352,7 +439,7 @@ const SchoolProfile = () => {
             </div>
           </div>
         );
-        case 'rewardPoints':
+      case 'rewardPoints':
         return (
           <div className="content-area">
             <h2><Gift className="icon" /> Total Reward Points</h2>
@@ -477,83 +564,83 @@ const SchoolProfile = () => {
             <button className="btn-primary">Save Preferences</button>
           </div>
         );
-        
-        
-        case 'My order':
-          return (
-            <div className="content-area">
-              <h2><ShoppingBag className="icon" /> My Orders</h2>
-              <div className="orders-list">
-                {orders.length === 0 ? (
-                  <p>No orders found.</p>
-                ) : (
-                  orders.map((order, index) => (
-                    <div key={index} className="order-card">
-                      <div className="order-header">
-                        <div className="order-meta">
-                          <span className="order-id">Order #: {order.id}</span>
-                          <span className="order-date">{order.createdAt}</span>
-                        </div>
-                      </div>
-                      <div className="order-items">
-                        {Array.isArray(order.items) ? (
-                          order.items.map((item, itemIndex) => (
-                            <div key={itemIndex} className="order-item">
-                              <img
-                                src={getImageSrc(item)}
-                                alt={item.name || 'Order Item'}
-                                className="item-image"
-                                onError={(e) => {
-                                  console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
-                                  e.target.src = 'http://localhost:5000/placeholder.jpg';
-                                }}
-                              />
-                              <div className="item-details">
-                                <h4>{item.name || 'Unnamed Item'}</h4>
-                                <div className="item-meta">
-                                  <span>Quantity: {item.quantity || 1}</span>
-                                  <span>Price: ₹{item.price || 0}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          JSON.parse(order.items).map((item, itemIndex) => (
-                            <div key={itemIndex} className="order-item">
-                              <img
-                                src={getImageSrc(item)}
-                                alt={item.name || 'Order Item'}
-                                className="item-image"
-                                onError={(e) => {
-                                  console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
-                                  e.target.src = 'http://localhost:5000/placeholder.jpg';
-                                }}
-                              />
-                              <div className="item-details">
-                                <h4>{item.name || 'Unnamed Item'}</h4>
-                                <div className="item-meta">
-                                  <span>Quantity: {item.quantity || 1}</span>
-                                  <span>Price: ₹{item.price || 0}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <div className="order-footer">
-                        <div className="order-total">
-                          <span>Total:</span>
-                          <span className="total-amount">₹{order.total}</span>
-                        </div>
+
+
+      case 'My order':
+        return (
+          <div className="content-area">
+            <h2><ShoppingBag className="icon" /> My Orders</h2>
+            <div className="orders-list">
+              {orders.length === 0 ? (
+                <p>No orders found.</p>
+              ) : (
+                orders.map((order, index) => (
+                  <div key={index} className="order-card">
+                    <div className="order-header">
+                      <div className="order-meta">
+                        <span className="order-id">Order #: {order.id}</span>
+                        <span className="order-date">{order.createdAt}</span>
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
+                    <div className="order-items">
+                      {Array.isArray(order.items) ? (
+                        order.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        JSON.parse(order.items).map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="order-footer">
+                      <div className="order-total">
+                        <span>Total:</span>
+                        <span className="total-amount">₹{order.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          );
+          </div>
+        );
 
-      // case 'total Student':
+        // case 'total Student':
         return (
           <div className="content-area">
             <h2><FaChildReaching className="icon" /> Total Student</h2>
@@ -633,6 +720,13 @@ const SchoolProfile = () => {
             <span>Coupons</span>
           </button>
           <button
+            className={`nav-button ${activeTab === 'specialCoupons' ? 'active' : ''}`}
+            onClick={() => setActiveTab('specialCoupons')}
+          >
+            <Ticket size={24} />
+            <span>specialCoupons</span>
+          </button>
+          <button
             className={`nav-button ${activeTab === 'wishlist' ? 'active' : ''}`}
             onClick={() => setActiveTab('wishlist')}
           >
@@ -646,7 +740,7 @@ const SchoolProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-          
+
         </nav>
         <main className="main-content">
           {renderContent()}

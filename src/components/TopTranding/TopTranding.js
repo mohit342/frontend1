@@ -1,3 +1,4 @@
+// src/components/TopTranding.js
 import React, { useEffect, useState } from "react";
 import "./TopTranding.css";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -11,10 +12,10 @@ import { useCart } from "../context/CartContext";
 const generateSlug = (name) => {
   return name
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')  // Remove special characters
-    .replace(/[\s_-]+/g, '-')  // Replace spaces/underscores with hyphens
-    .replace(/^-+|-+$/g, '')   // Trim hyphens from both ends
-    .substring(0, 200);        // Increased length limit
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 200);
 };
 
 const TopTranding = () => {
@@ -26,7 +27,6 @@ const TopTranding = () => {
     const fetchProducts = async () => {
       try {
         const response = await fetch("http://localhost:5000/api/products/top-trending");
-        
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
@@ -36,14 +36,13 @@ const TopTranding = () => {
 
         const formattedProducts = productsData.map(product => ({
           ...product,
-          id: product.id || product._id,
+          id: product.id,
           slug: product.slug || generateSlug(product.name),
           price: Number(product.price),
           discount_percentage: Number(product.discount_percentage) || 0,
-          debugSlug: product.slug ? 'from-api' : 'generated' // For debugging
+          images: product.images || ["/placeholder.jpg"] // Placeholder for images
         }));
 
-        console.log('Processed products:', formattedProducts);
         setProducts(formattedProducts);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -68,7 +67,8 @@ const TopTranding = () => {
         ...product,
         price: Number(product.price),
         images: product.images?.[0] || "/placeholder.jpg",
-        mrp: mrp.toFixed(2)
+        mrp: mrp.toFixed(2),
+        stock_quantity: product.stock_quantity || 0 // Include stock for cart
       });
   
       alert(success ? "Item added to cart!" : "Failed to add item!");
@@ -138,16 +138,20 @@ const TopTranding = () => {
                       )}
                     </div>
                   </div>
-                  <Link 
-                    to={`/product/${encodeURIComponent(product.slug)}`} 
-                  >
-                  <button 
-                    className="add-to-cart-btn"
-                    // onClick={(e) => handleAddToCart(product, e)}
-                  >
-                    View Details
-                  </button>
-                  </Link>
+                  <div className="button-container">
+                    <button 
+                      className="add-to-cart-btn"
+                      onClick={(e) => handleAddToCart(product, e)}
+                      disabled={product.stock_quantity <= 0}
+                    >
+                      {product.stock_quantity <= 0 ? "Out of Stock" : "Add to Cart"}
+                    </button>
+                    <Link to={`/product/${encodeURIComponent(product.slug)}`}>
+                      {/* <button className="view-details-btn">
+                        View Details
+                      </button> */}
+                    </Link>
+                  </div>
                 </div>
               </SwiperSlide>
             );

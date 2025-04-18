@@ -137,13 +137,13 @@ const Productpage = () => {
       <Header setSearchTerm={setSearchTerm} />
       <main className="main-content1">
         <div className="categories-container1">
-          <button
+          {/* <button
             onClick={() => setSelectedCategory(null)}
             className={`category-pill1 ${!selectedCategory ? "active" : ""}`}
           >
             All
-          </button>
-          {categories.map((category) => (
+          </button> */}
+          {/* {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
@@ -153,7 +153,7 @@ const Productpage = () => {
             >
               {category}
             </button>
-          ))}
+          ))} */}
         </div>
 
         <div className="products-grid1">
@@ -179,7 +179,7 @@ const Productpage = () => {
                   <div className="category-tag1">
                     <span>{product.category}</span>
                   </div>
-                  <button
+                  {/* <button
                     className="favorite-button1"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -191,7 +191,7 @@ const Productpage = () => {
                       fill={favorites.has(product.id) ? "red" : "none"}
                       color={favorites.has(product.id) ? "red" : "grey"}
                     />
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="product-details1">

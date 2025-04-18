@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Testinomials.css"; // Import CSS file
-import Header from "../../components/header/Header";
-import Footer from "../../components/Footer/Footer";
+
 import Teacher from "../../assets/teacher2.jpg";
 import Teacher1 from "../../assets/teacher3.jpg";
 import Teacher2 from "../../assets/teacher4.jpg";
 import Teacher3 from "../../assets/teacher5.jpg";
 import TestimonialCard from "./TestimonialCard";
-import { GrLinkPrevious, GrLinkNext } from "react-icons/gr"; // Import both icons
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const testimonialsData = [
   {
@@ -15,8 +14,8 @@ const testimonialsData = [
     image: Teacher,
     designation: "Director/Principal | Shri Ram Satluj School, Sirsa, Haryana",
     text: `
-      I just wanted to share a quick note and let you know that you guys do a really good job, 
-      being a one stop solution is not a cherry on cake, 
+      I just wanted to share a quick note and let you know that you guys do a really good job,
+      being a one stop solution is not a cherry on cake,
       and you guys on the other hand facilitating the things in a very smoother way.
     `,
   },
@@ -54,6 +53,7 @@ const testimonialsData = [
 
 const Testimonials = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const intervalTime = 5000; // 5 seconds
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) =>
@@ -67,42 +67,40 @@ const Testimonials = () => {
     );
   };
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      handleNext();
+    }, intervalTime);
+    return () => clearInterval(timer); // Cleanup on unmount or index change
+  }, [currentIndex]);
+
   return (
     <>
-      
+    
       <section className="testimonials">
         <h1>"Your Trust, Our Pride" — Hear from MittStore Shoppers</h1>
         <div className="testimonials-container">
           <div className="dots">
-            {Array(10)
-              .fill()
-              .map((_, index) => (
-                <div key={index} className="dot"></div>
-              ))}
+            {testimonialsData.map((_, index) => (
+              <div
+                key={index}
+                className={`dot ${index === currentIndex ? "active" : ""}`}
+                onClick={() => setCurrentIndex(index)}
+              ></div>
+            ))}
           </div>
           <TestimonialCard {...testimonialsData[currentIndex]} />
-          <div className="nav-buttons">
-            <button
-              className="nav-button1"
-              onClick={handlePrev}
-              disabled={testimonialsData.length <= 1}
-            >
-              <GrLinkPrevious /> {/* Previous icon */}
+          {/* <div className="testimonial-nav-buttons">
+            <button className="arrow-button left" onClick={handlePrev}>
+              <FaArrowLeft />
             </button>
-            <button
-              className="nav-button1"
-              onClick={handleNext}
-              disabled={testimonialsData.length <= 1}
-            >
-              <GrLinkNext /> {/* Next icon */}
+            <button className="arrow-button right" onClick={handleNext}>
+              <FaArrowRight />
             </button>
-          </div>
-          {/* Optional: Add illustration and logo if desired */}
-          {/* <img src="path/to/illustration.png" alt="Illustration" className="illustration" />
-          <img src="path/to/m-logo.png" alt="Logo" className="logo" /> */}
+          </div> */}
         </div>
       </section>
-      
+     
     </>
   );
 };

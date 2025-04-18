@@ -23,7 +23,8 @@ const SignupForm = () => {
     address: '',
     employeeId: '',
     schoolId: '',
-    schoolName: ''
+    schoolName: '',
+    seRole: '' // New field for SE role
   });
 
   const [seEmployeeIds, setSeEmployeeIds] = useState([]);
@@ -92,7 +93,7 @@ const SignupForm = () => {
   };
 
   const handleUserTypeChange = (e) => {
-    setFormData({ ...formData, userType: e.target.value });
+    setFormData({ ...formData, userType: e.target.value, seRole: '' }); // Reset seRole when userType changes
   };
 
   const fetchCityState = async () => {
@@ -192,7 +193,8 @@ const SignupForm = () => {
           city: '',
           state: '',
           address: '',
-          employeeId: ''
+          employeeId: '',
+          seRole: ''
         });
         navigate('/user/login');
       } else {
@@ -227,13 +229,14 @@ const SignupForm = () => {
           <input type="text" className='input133' name="mobile" value={formData.mobile} onChange={handleChange} required />
         </div>
         <div>
-          <label className='label133'>Enter OTP</label>
+          <label className='label133' >Enter OTP required </label>
           <input
             className='input133'
             type="text"
             name="otp"
             value={formData.otp}
             onChange={handleChange}
+            required 
           />
           <button type="button" className='button133' onClick={handleSendOtp} disabled={loading}>
             {loading ? 'Sending...' : 'Send OTP'}
@@ -264,9 +267,9 @@ const SignupForm = () => {
             <label>
               <input type="radio" className='input133' name="userType" value="se" onChange={handleUserTypeChange} /> SE
             </label>
-            <label>
+            {/* <label>
               <input type="radio" className='input133' name="userType" value="other" onChange={handleUserTypeChange} /> Other
-            </label>
+            </label> */}
           </div>
         </div>
 
@@ -286,18 +289,28 @@ const SignupForm = () => {
   </div>
 )}
         {formData.userType === 'se' && (
-          <div>
-            <label>Enter SE Employee ID</label>
-            <input
-              className='input133'
-              type="text"
-              name="employeeId"
-              value={formData.employeeId}
-              onChange={handleChange}
-              placeholder="Enter your Employee ID"
-              required
-            />
-          </div>
+          <>
+            <div>
+              <label className='label133'>Enter SE Employee ID</label>
+              <input
+                className='input133'
+                type="text"
+                name="employeeId"
+                value={formData.employeeId}
+                onChange={handleChange}
+                placeholder="Enter your Employee ID"
+                required
+              />
+            </div>
+            <div>
+              <label className='label133'>SE Role</label>
+              <select name="seRole" value={formData.seRole} onChange={handleChange} required>
+                <option value="">Select SE Role</option>
+                <option value="Calling SE">Calling SE</option>
+                <option value="Field SE">Field SE</option>
+              </select>
+            </div>
+          </>
         )}
 
         {formData.userType === 'school' && (

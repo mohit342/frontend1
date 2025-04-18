@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Drawer, IconButton, Link } from "@mui/material";
+import { Link } from "@mui/material";
+import './ForgetPassword.css';
 
 function ForgetPassword() {
   const [email, setEmail] = useState('');
@@ -44,40 +45,47 @@ function ForgetPassword() {
   };
 
   return (
-    <div className="container-login">
-      <div className="login-box">
-        <h2>Forgot Password</h2>
+    <div className="container-login700">
+      <div className="login-box700">
+        <h2 className="heading700">Forgot Password</h2>
         {step === 1 && (
-          <div>
+          <div className="form-step700">
             <input
               type="email"
+              className="input700"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <button onClick={sendOTP}>Send OTP</button>
+            <button className="button700" onClick={sendOTP}>Send OTP</button>
           </div>
         )}
         {step === 2 && (
-          <div>
+          <div className="form-step700">
             <input
               type="text"
+              className="input700"
               placeholder="Enter OTP"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
             />
             <input
               type="password"
+              className="input700"
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
-            <button onClick={resetPassword}>Reset Password</button>
+            <button className="button700" onClick={resetPassword}>Reset Password</button>
           </div>
         )}
-        {step === 3 && <p>Password reset successfully!<Link href="/user/login">  You can now log in.</Link></p>}
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {step === 3 && (
+          <p className="success-message700">
+            Password reset successfully!<Link href="/user/login"> You can now log in.</Link>
+          </p>
+        )}
+        {message && <p className="success-text700">{message}</p>}
+        {error && <p className="error-text700">{error}</p>}
       </div>
     </div>
   );
