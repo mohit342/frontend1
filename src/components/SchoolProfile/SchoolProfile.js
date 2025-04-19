@@ -24,12 +24,13 @@ const SchoolProfile = () => {
   const [couponsLoading, setCouponsLoading] = useState(false);
   const [couponsError, setCouponsError] = useState(null);
   const [rewardPoints, setRewardPoints] = useState(0);
-  const [studentRewards, setStudentRewards] = useState([]); // New state for student rewards
+  const [studentRewards, setStudentRewards] = useState([]);
   const [studentRewardsLoading, setStudentRewardsLoading] = useState(false);
   const [studentRewardsError, setStudentRewardsError] = useState(null);
   const [specialCouponsLoading, setSpecialCouponsLoading] = useState(false);
   const [specialCouponsError, setSpecialCouponsError] = useState(null);
   const [specialCoupons, setSpecialCoupons] = useState([]);
+  const [redeemPointsAmount, setRedeemPointsAmount] = useState(''); // State for redeem points input
 
   const getImageSrc = (item) => {
     if (item.images && item.images.length > 0) {
@@ -37,8 +38,9 @@ const SchoolProfile = () => {
     } else if (item.image) {
       return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
     }
-    return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
+    return `http://localhost:5000/placeholder.jpg`;
   };
+
   const [formData, setFormData] = useState({
     schoolName: '',
     email: '',
@@ -57,7 +59,6 @@ const SchoolProfile = () => {
 
   const handleRemoveFromWishlist = async (productId) => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
-
     if (!storedUser || !storedUser.id) return;
 
     try {
@@ -72,6 +73,39 @@ const SchoolProfile = () => {
       setWishlistError('Failed to remove item from wishlist. Please try again.');
     }
   };
+
+  const handleRedeemRequest = async (e) => {
+    e.preventDefault();
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (!storedUser || !storedUser.id) {
+      alert('Please log in to request point redemption.');
+      return;
+    }
+
+    const pointsToRedeem = parseInt(redeemPointsAmount);
+    if (isNaN(pointsToRedeem) || pointsToRedeem <= 0) {
+      alert('Please enter a valid number of points to redeem.');
+      return;
+    }
+
+    if (pointsToRedeem > rewardPoints) {
+      alert('Requested points exceed your current balance.');
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/redeem-request-school', {
+        schoolId: storedUser.id,
+        points: pointsToRedeem,
+      });
+      alert(response.data.message);
+      setRedeemPointsAmount(''); // Reset input field
+    } catch (error) {
+      console.error('Error submitting redeem request:', error);
+      alert(error.response?.data?.error || 'Failed to submit redeem request.');
+    }
+  };
+
   useEffect(() => {
     const fetchUserDetailsAndData = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -92,18 +126,16 @@ const SchoolProfile = () => {
         console.log("Fetching schoolId for userId:", storedUser.id);
         if (storedUser.role === 'school') {
           const schoolResponse = await axios.get(`http://localhost:5000/api/school-details/${storedUser.id}`);
-          schoolId = schoolResponse.data.id || storedUser.id; // Assuming school-details returns school_id
+          schoolId = schoolResponse.data.id || storedUser.id;
         } else if (storedUser.role === 'student') {
           const studentResponse = await axios.get(`http://localhost:5000/api/users/${storedUser.id}`);
           schoolId = studentResponse.data.school_id;
         }
 
         if (schoolId) {
-          // Fetch reward points
           const pointsResponse = await axios.get(`http://localhost:5000/api/schools/user/${storedUser.id}/points`);
           setRewardPoints(pointsResponse.data.reward_points);
 
-          // Fetch student rewards
           setStudentRewardsLoading(true);
           try {
             const rewardsResponse = await axios.get(`http://localhost:5000/api/schools/${schoolId}/student-rewards`);
@@ -125,11 +157,9 @@ const SchoolProfile = () => {
         setStudentRewards([]);
       }
 
-      // Fetch orders
       setOrdersLoading(true);
       try {
         const ordersResponse = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
-        // const ordersData = await ordersResponse.json();
         let ordersData = await ordersResponse.json();
         ordersData = ordersData.sort((a, b) => b.id - a.id);
         setOrders(ordersData);
@@ -141,7 +171,6 @@ const SchoolProfile = () => {
         setOrdersLoading(false);
       }
 
-      // Fetch wishlist
       setWishlistLoading(true);
       try {
         const wishlistResponse = await axios.get(`http://localhost:5000/api/wishlist/${storedUser.id}`);
@@ -158,12 +187,11 @@ const SchoolProfile = () => {
         setWishlistLoading(false);
       }
 
-      // Fetch coupons based on user_id
       setCouponsLoading(true);
       try {
         const couponsResponse = await axios.get(`http://localhost:5000/api/coupons/user/${storedUser.id}`);
-        console.log('Coupons Response:', couponsResponse.data); // Debug log
-        setCoupons(couponsResponse.data); // Expecting an array of coupons
+        console.log('Coupons Response:', couponsResponse.data);
+        setCoupons(couponsResponse.data);
         setCouponsError(null);
       } catch (error) {
         console.error('Error fetching coupons:', error);
@@ -175,29 +203,28 @@ const SchoolProfile = () => {
 
     fetchUserDetailsAndData();
   }, []);
+
   useEffect(() => {
     const fetchSpecialCoupons = async () => {
       setSpecialCouponsLoading(true);
       try {
         const storedUser = JSON.parse(localStorage.getItem('user'));
-
-        console.log("Stored User Data:", storedUser); // 🔍 Check full user data
+        console.log("Stored User Data:", storedUser);
 
         if (!storedUser || !storedUser.id) {
           setSpecialCouponsError("User not found. Please log in.");
           return;
         }
 
-        console.log("Fetching special coupons for userId:", storedUser.id); // ✅ Debug userId
+        console.log("Fetching special coupons for userId:", storedUser.id);
 
-        // Fetch only universal coupons from couponsall table
         let specialCoupons = [];
         try {
           console.log("Requesting universal coupons for URL:", `http://localhost:5000/api/couponall/user/${storedUser.id}`);
           const specialCouponsResponse = await axios.get(`http://localhost:5000/api/couponall/user/${storedUser.id}`);
           specialCoupons = specialCouponsResponse.data.map(coupon => ({
             code: coupon.code,
-            name: coupon.name, // Ensure name is included
+            name: coupon.name,
             discount_percentage: coupon.discount_percentage,
             valid_from: coupon.valid_from,
             valid_until: coupon.valid_until,
@@ -208,7 +235,7 @@ const SchoolProfile = () => {
           console.warn("Failed to fetch special coupons:", error.message);
         }
 
-        console.log("Special Coupons:", specialCoupons); // ✅ Debug special coupons
+        console.log("Special Coupons:", specialCoupons);
 
         setSpecialCoupons(specialCoupons);
         setSpecialCouponsError(specialCoupons.length === 0 ? "No special coupons available." : null);
@@ -405,7 +432,6 @@ const SchoolProfile = () => {
                           {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
                         <p className="type">{isStudentCoupon ? 'Student Coupon' : 'School Coupon'}</p>
-                        {/* <button className="btn-secondary">Use Coupon</button> */}
                       </div>
                     );
                   })
@@ -431,10 +457,19 @@ const SchoolProfile = () => {
             <div className="redeem-options">
               <h3>Redeem for:</h3>
               <div className="redeem-grid">
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹5 Off Coupon (500 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹10 Off Coupon (1000 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> Free Shipping (750 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹20 Off Coupon (2000 pts)</button>
+                <form onSubmit={handleRedeemRequest} className="redeem-form">
+                  <input
+                    type="number"
+                    value={redeemPointsAmount}
+                    onChange={(e) => setRedeemPointsAmount(e.target.value)}
+                    placeholder="Enter points to redeem"
+                    min="1"
+                    className="redeem-input"
+                  />
+                  <button type="submit" className="btn-primary">
+                    <ShoppingBag size={18} /> Redeem Point Request
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -452,7 +487,7 @@ const SchoolProfile = () => {
                 <div className="table-header">
                   <span className="table-column">Student Name</span>
                   <span className="table-column">Order Amount</span>
-                  <span className="table-column">Points Awarded</span>
+                  {/* <span className="table-column">Points Awarded</span> */}
                   <span className="table-column">Purchase Date</span>
                 </div>
                 {studentRewards.length === 0 ? (
@@ -462,7 +497,7 @@ const SchoolProfile = () => {
                     <div key={index} className="table-row">
                       <span className="table-column">{data.student_name}</span>
                       <span className="table-column">₹{data.order_amount}</span>
-                      <span className="table-column">{data.points_awarded} pts</span>
+                      {/* <span className="table-column">{data.points_awarded} pts</span> */}
                       <span className="table-column">{data.purchase_date}</span>
                     </div>
                   ))
@@ -564,8 +599,6 @@ const SchoolProfile = () => {
             <button className="btn-primary">Save Preferences</button>
           </div>
         );
-
-
       case 'My order':
         return (
           <div className="content-area">
@@ -639,32 +672,6 @@ const SchoolProfile = () => {
             </div>
           </div>
         );
-
-        // case 'total Student':
-        return (
-          <div className="content-area">
-            <h2><FaChildReaching className="icon" /> Total Student</h2>
-            <div className="Student-table">
-              <div className="table-header">
-                <span className="table-column">Student Name</span>
-                <span className="table-column">Purchase Amount</span>
-                <span className="table-column">Reward</span>
-              </div>
-              {[
-                { Student: "mohit", purchaseAmount: "₹50,000", reward: "₹2,500" },
-                { Student: "prerna", purchaseAmount: "₹70,000", reward: "₹3,500" },
-                { Student: "lakshita", purchaseAmount: "₹60,000", reward: "₹3,000" },
-                { Student: "sourabh", purchaseAmount: "₹80,000", reward: "₹4,000" },
-              ].map((data, index) => (
-                <div key={index} className="table-row">
-                  <span className="table-column">{data.Student}</span>
-                  <span className="table-column">{data.purchaseAmount}</span>
-                  <span className="table-column">{data.reward}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
       default:
         return <div className="content-area">Select a tab to view content.</div>;
     }
@@ -698,13 +705,6 @@ const SchoolProfile = () => {
             <Gift size={24} />
             <span>Total Reward Points</span>
           </button>
-          {/* <button
-            className={`nav-button ${activeTab === 'total Student' ? 'active' : ''}`}
-            onClick={() => setActiveTab('total Student')}
-          >
-            <FaChildReaching size={24} />
-            <span>Total Student</span>
-          </button> */}
           <button
             className={`nav-button ${activeTab === 'My order' ? 'active' : ''}`}
             onClick={() => setActiveTab('My order')}
@@ -740,7 +740,6 @@ const SchoolProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-
         </nav>
         <main className="main-content">
           {renderContent()}

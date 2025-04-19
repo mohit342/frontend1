@@ -3,18 +3,16 @@ import "./SeProfile.css";
 import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag, Star, Zap } from 'lucide-react';
 import men from "../../assets/men.jpg";
 import supple from "../../assets/supplies.jpg";
-import { Link, useLocation } from "react-router-dom"; // Added useLocation
+import { Link, useLocation } from "react-router-dom";
 import { BiSolidSchool } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
 import axios from 'axios';
 
 const SeProfile = () => {
-  // Handle tab from URL query parameter
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const tabFromUrl = queryParams.get('tab');
   
-  // Initialize activeTab with tabFromUrl or default to 'Total School'
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'Total School');
   const [user, setUser] = useState({
     full_name: '',
@@ -37,7 +35,7 @@ const SeProfile = () => {
     } else if (item.image) {
       return `http://localhost:5000/${item.image.replace(/\\/g, "/")}`;
     }
-    return `http://localhost:5000/placeholder.jpg`; // Explicit fallback path
+    return `http://localhost:5000/placeholder.jpg`;
   };
   const [formData, setFormData] = useState({
     fullName: '',
@@ -45,20 +43,17 @@ const SeProfile = () => {
     password: '',
     confirmPassword: '',
   });
-  const [redeemPoints, setRedeemPoints] = useState(0); // New state for SE redeem points
-
+  const [redeemPoints, setRedeemPoints] = useState(0);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
-  
-  // Sync activeTab with URL changes
+
   useEffect(() => {
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
 
-  // Fetch user data and wishlist
   useEffect(() => {
     const fetchUserDataAndData = async () => {
       try {
@@ -108,7 +103,6 @@ const SeProfile = () => {
     fetchUserDataAndData();
   }, []);
 
-  // New useEffect for fetching school rewards
   useEffect(() => {
     const fetchSchoolRewards = async () => {
       try {
@@ -120,7 +114,7 @@ const SeProfile = () => {
 
         setRewardsLoading(true);
         const response = await axios.get(`http://localhost:5000/api/se/${seId}/school-rewards`);
-        console.log("School rewards data:", response.data); // Debug log
+        console.log("School rewards data:", response.data);
         setSchoolRewards(response.data);
         setRewardsError(null);
       } catch (error) {
@@ -134,7 +128,6 @@ const SeProfile = () => {
     fetchSchoolRewards();
   }, []);
 
-  // Fetch schools with coupons
   const fetchSchools = async () => {
     try {
       const seEmployeeId = localStorage.getItem('seEmployeeId');
@@ -155,7 +148,6 @@ const SeProfile = () => {
     fetchSchools();
   }, []);
 
-  // Fetch total schools
   const fetchTotalSchools = async () => {
     try {
       const seEmployeeId = localStorage.getItem('seEmployeeId');
@@ -176,7 +168,6 @@ const SeProfile = () => {
     fetchTotalSchools();
   }, []);
 
-  // Fetch orders
   useEffect(() => {
     const fetchOrders = async () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -187,7 +178,6 @@ const SeProfile = () => {
         const response = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
         let data = await response.json();
   
-        // Sort orders by order_id in descending order (higher IDs first)
         data = data.sort((a, b) => b.id - a.id);
   
         setOrders(data);
@@ -203,7 +193,6 @@ const SeProfile = () => {
     fetchOrders();
   }, []);
 
-  // Generate slug for product URLs
   const generateSlug = (name) => {
     return name
       .toLowerCase()
@@ -213,7 +202,6 @@ const SeProfile = () => {
       .substring(0, 200);
   };
 
-  // Remove item from wishlist
   const handleRemoveFromWishlist = async (productId) => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (!storedUser || !storedUser.id) return;
@@ -258,7 +246,6 @@ const SeProfile = () => {
             confirmPassword: '',
           });
 
-          // Fetch SE redeem points
           const pointsResponse = await axios.get(`http://localhost:5000/api/se/${seId}/points`);
           setRedeemPoints(pointsResponse.data.redeem_points || 0);
         } else {
@@ -272,14 +259,9 @@ const SeProfile = () => {
     fetchUserData();
   }, []);
 
-  
-  
-
   useEffect(() => {
     fetchSchools();
   }, []);
-
-
 
   useEffect(() => {
     fetchTotalSchools();
@@ -309,13 +291,13 @@ const SeProfile = () => {
 
     fetchWishlist();
   }, []);
-   useEffect(() => {
-      if (tabFromUrl) {
-        setActiveTab(tabFromUrl);
-      }
-    }, [tabFromUrl]);
 
-  // Generate coupon
+  useEffect(() => {
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
   const generateCoupon = async () => {
     if (!selectedSchool) {
       alert("Please select a school.");
@@ -325,7 +307,7 @@ const SeProfile = () => {
     const requestBody = {
       schoolId: selectedSchool,
       seEmployeeId: user.userId,
-      discountPercentage: 10, // Add this (or make it dynamic via UI)
+      discountPercentage: 10,
       validFrom: new Date().toISOString().split("T")[0],
       validUntil: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split("T")[0],
       maxUses: 999999
@@ -344,7 +326,7 @@ const SeProfile = () => {
         alert(data.reason || data.error);
       } else {
         alert(`Coupons Generated!\nSchool Coupon: ${data.schoolCouponCode}\nStudent Coupon: ${data.studentCouponCode}`);
-        fetchSchools(); // Refresh school list
+        fetchSchools();
       }
     } catch (error) {
       console.error("Error generating coupon:", error);
@@ -393,7 +375,28 @@ const SeProfile = () => {
     }
   };
 
-  // Render content based on activeTab
+  const handleRedeemRequest = async () => {
+    if (redeemPoints <= 0) {
+      alert("You don't have enough points to redeem.");
+      return;
+    }
+
+    try {
+      const seId = localStorage.getItem('seEmployeeId');
+      const response = await axios.post('http://localhost:5000/api/redeem-request', {
+        seId: seId,
+        points: redeemPoints,
+      });
+
+      if (response.status === 200) {
+        alert('Redeem request submitted successfully! Awaiting admin approval.');
+      }
+    } catch (error) {
+      console.error('Error submitting redeem request:', error);
+      alert('Failed to submit redeem request. Please try again.');
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'wishlist':
@@ -449,54 +452,52 @@ const SeProfile = () => {
         return (
           <div className="content-area">
             <h2><MapPin className="icon" /> Address Book</h2>
-            {/* Add address book content here if needed */}
           </div>
         );
-        case 'Total Reward Earns':
-          return (
-            <div className="content-area">
-              <h2><Star className="icon" /> Total Reward Earns</h2>
-              {rewardsLoading ? (
-                <p>Loading rewards data...</p>
-              ) : rewardsError ? (
-                <p>{rewardsError}</p>
-              ) : (
-                <div className="school-rewards-table">
-                  <div className="table-header">
-                    <span className="table-column">School Name</span>
-                    <span className="table-column">Total Purchase Amount</span>
-                    <span className="table-column">Total Points Awarded</span>
-                    <span className="table-column">Latest Order Date</span>
-                  </div>
-                  {schoolRewards.length > 0 ? (
-                    schoolRewards.map((reward, index) => (
-                      <div key={index} className="table-row">
-                        <span className="table-column">{reward.school_name || 'Unknown'}</span>
-                        <span className="table-column">
-                          ₹{typeof reward.purchase_amount === 'number' ? 
-                            reward.purchase_amount.toFixed(2) : 
-                            '0.00'}
-                        </span>
-                        <span className="table-column">
-                          {typeof reward.points_awarded === 'number' ? 
-                            reward.points_awarded.toFixed(2) : 
-                            '0.00'}
-                        </span>
-                        <span className="table-column">
-                          {reward.latest_order_date ? 
-                            new Date(reward.latest_order_date).toLocaleDateString() : 
-                            'N/A'}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p>No reward data available for associated schools.</p>
-                  )}
+      case 'Total Reward Earns':
+        return (
+          <div className="content-area">
+            <h2><Star className="icon" /> Total Reward Earns</h2>
+            {rewardsLoading ? (
+              <p>Loading rewards data...</p>
+            ) : rewardsError ? (
+              <p>{rewardsError}</p>
+            ) : (
+              <div className="school-rewards-table">
+                <div className="table-header">
+                  <span className="table-column">School Name</span>
+                  <span className="table-column">Total Purchase Amount</span>
+                  <span className="table-column">Total Points Awarded</span>
+                  <span className="table-column">Latest Order Date</span>
                 </div>
-              )}
-            </div>
-          );
-        
+                {schoolRewards.length > 0 ? (
+                  schoolRewards.map((reward, index) => (
+                    <div key={index} className="table-row">
+                      <span className="table-column">{reward.school_name || 'Unknown'}</span>
+                      <span className="table-column">
+                        ₹{typeof reward.purchase_amount === 'number' ? 
+                          reward.purchase_amount.toFixed(2) : 
+                          '0.00'}
+                      </span>
+                      <span className="table-column">
+                        {typeof reward.points_awarded === 'number' ? 
+                          reward.points_awarded.toFixed(2) : 
+                          '0.00'}
+                      </span>
+                      <span className="table-column">
+                        {reward.latest_order_date ? 
+                          new Date(reward.latest_order_date).toLocaleDateString() : 
+                          'N/A'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p>No reward data available for associated schools.</p>
+                )}
+              </div>
+            )}
+          </div>
+        );
       case 'Genrate coupons':
         return (
           <div className="content-area">
@@ -523,111 +524,109 @@ const SeProfile = () => {
             </div>
           </div>
         );
-        case 'Total School':
-          return (
-            <div className="content-area">
-              <h2><BiSolidSchool className="icon" /> Total School</h2>
-              <div className="school-table">
-                <div className="table-header">
-                  <span className="table-column">SE ID</span>
-                  <span className="table-column">School Name</span>
-                  <span className="table-column">School Coupon</span>
-                  <span className="table-column">Student Coupon</span>
-                  <span className="table-column">Generation Date</span>
-                </div>
-                {totalSchools.length > 0 ? (
-                  totalSchools.map((school, index) => (
-                    <div key={index} className="table-row">
-                      <span className="table-column">{school.se_id || "N/A"}</span>
-                      <span className="table-column">{school.school_name}</span>
-                      <span className="table-column">{school.school_coupon_code || "Not Generated"}</span>
-                      <span className="table-column">{school.student_coupon_code || "Not Generated"}</span>
-                      <span className="table-column">
-                        {school.generation_date ? new Date(school.generation_date).toLocaleDateString() : "N/A"}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p>No schools registered under your ID.</p>
-                )}
+      case 'Total School':
+        return (
+          <div className="content-area">
+            <h2><BiSolidSchool className="icon" /> Total School</h2>
+            <div className="school-table">
+              <div className="table-header">
+                <span className="table-column">SE ID</span>
+                <span className="table-column">School Name</span>
+                <span className="table-column">School Coupon</span>
+                <span className="table-column">Student Coupon</span>
+                <span className="table-column">Generation Date</span>
               </div>
+              {totalSchools.length > 0 ? (
+                totalSchools.map((school, index) => (
+                  <div key={index} className="table-row">
+                    <span className="table-column">{school.se_id || "N/A"}</span>
+                    <span className="table-column">{school.school_name}</span>
+                    <span className="table-column">{school.school_coupon_code || "Not Generated"}</span>
+                    <span className="table-column">{school.student_coupon_code || "Not Generated"}</span>
+                    <span className="table-column">
+                      {school.generation_date ? new Date(school.generation_date).toLocaleDateString() : "N/A"}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p>No schools registered under your ID.</p>
+              )}
             </div>
-          );
-         
-          
-          case 'My order':
-            return (
-              <div className="content-area">
-                <h2><ShoppingBag className="icon" /> My Orders</h2>
-                <div className="orders-list">
-                  {orders.length === 0 ? (
-                    <p>No orders found.</p>
-                  ) : (
-                    orders.map((order, index) => (
-                      <div key={index} className="order-card">
-                        <div className="order-header">
-                          <div className="order-meta">
-                            <span className="order-id">Order #: {order.id}</span>
-                            <span className="order-date">{order.createdAt}</span>
-                          </div>
-                        </div>
-                        <div className="order-items">
-                          {Array.isArray(order.items) ? (
-                            order.items.map((item, itemIndex) => (
-                              <div key={itemIndex} className="order-item">
-                                <img
-                                  src={getImageSrc(item)}
-                                  alt={item.name || 'Order Item'}
-                                  className="item-image"
-                                  onError={(e) => {
-                                    console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
-                                    e.target.src = 'http://localhost:5000/placeholder.jpg';
-                                  }}
-                                />
-                                <div className="item-details">
-                                  <h4>{item.name || 'Unnamed Item'}</h4>
-                                  <div className="item-meta">
-                                    <span>Quantity: {item.quantity || 1}</span>
-                                    <span>Price: ₹{item.price || 0}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            JSON.parse(order.items).map((item, itemIndex) => (
-                              <div key={itemIndex} className="order-item">
-                                <img
-                                  src={getImageSrc(item)}
-                                  alt={item.name || 'Order Item'}
-                                  className="item-image"
-                                  onError={(e) => {
-                                    console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
-                                    e.target.src = 'http://localhost:5000/placeholder.jpg';
-                                  }}
-                                />
-                                <div className="item-details">
-                                  <h4>{item.name || 'Unnamed Item'}</h4>
-                                  <div className="item-meta">
-                                    <span>Quantity: {item.quantity || 1}</span>
-                                    <span>Price: ₹{item.price || 0}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                        <div className="order-footer">
-                          <div className="order-total">
-                            <span>Total:</span>
-                            <span className="total-amount">₹{order.total}</span>
-                          </div>
-                        </div>
+          </div>
+        );
+      case 'My order':
+        return (
+          <div className="content-area">
+            <h2><ShoppingBag className="icon" /> My Orders</h2>
+            <div className="orders-list">
+              {orders.length === 0 ? (
+                <p>No orders found.</p>
+              ) : (
+                orders.map((order, index) => (
+                  <div key={index} className="order-card">
+                    <div className="order-header">
+                      <div className="order-meta">
+                        <span className="order-id">Order #: {order.id}</span>
+                        <span className="order-date">{order.createdAt}</span>
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            );
+                    </div>
+                    <div className="order-items">
+                      {Array.isArray(order.items) ? (
+                        order.items.map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        JSON.parse(order.items).map((item, itemIndex) => (
+                          <div key={itemIndex} className="order-item">
+                            <img
+                              src={getImageSrc(item)}
+                              alt={item.name || 'Order Item'}
+                              className="item-image"
+                              onError={(e) => {
+                                console.error(`Failed to load image for ${item.name || 'item'}: ${e.target.src}`);
+                                e.target.src = 'http://localhost:5000/placeholder.jpg';
+                              }}
+                            />
+                            <div className="item-details">
+                              <h4>{item.name || 'Unnamed Item'}</h4>
+                              <div className="item-meta">
+                                <span>Quantity: {item.quantity || 1}</span>
+                                <span>Price: ₹{item.price || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="order-footer">
+                      <div className="order-total">
+                        <span>Total:</span>
+                        <span className="total-amount">₹{order.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        );
       case 'redeemPoints':
         return (
           <div className="content-area">
@@ -645,10 +644,9 @@ const SeProfile = () => {
             <div className="redeem-options">
               <h3>Redeem for:</h3>
               <div className="redeem-grid">
-                <button className="btn-primary"><ShoppingBag size={18} /> Request for Redeem</button>
-                {/* <button className="btn-primary"><ShoppingBag size={18} /> ₹10 Off Coupon (1000 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> Free Shipping (750 pts)</button>
-                <button className="btn-primary"><ShoppingBag size={18} /> ₹20 Off Coupon (2000 pts)</button> */}
+                <button className="btn-primary" onClick={handleRedeemRequest}>
+                  <ShoppingBag size={18} /> Request for Redeem
+                </button>
               </div>
             </div>
           </div>
@@ -702,50 +700,6 @@ const SeProfile = () => {
             </form>
           </div>
         );
-      // case 'manageNotifications':
-        return (
-          <div className="content-area">
-            <h2><Bell className="icon" /> Manage Notifications</h2>
-            <div className="notification-settings">
-              <div className="notification-option">
-                <label htmlFor="emailNotifications" className="switch">
-                  <input type="checkbox" id="emailNotifications" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-                <span>Email Notifications</span>
-              </div>
-              <div className="notification-option">
-                <label htmlFor="smsNotifications" className="switch">
-                  <input type="checkbox" id="smsNotifications" />
-                  <span className="slider"></span>
-                </label>
-                <span>SMS Notifications</span>
-              </div>
-              <div className="notification-option">
-                <label htmlFor="pushNotifications" className="switch">
-                  <input type="checkbox" id="pushNotifications" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-                <span>Push Notifications</span>
-              </div>
-              <div className="notification-option">
-                <label htmlFor="orderUpdates" className="switch">
-                  <input type="checkbox" id="orderUpdates" defaultChecked />
-                  <span className="slider"></span>
-                </label>
-                <span>Order Updates</span>
-              </div>
-              <div className="notification-option">
-                <label htmlFor="promotionalEmails" className="switch">
-                  <input type="checkbox" id="promotionalEmails" />
-                  <span className="slider"></span>
-                </label>
-                <span>Promotional Emails</span>
-              </div>
-            </div>
-            <button className="btn-primary">Save Preferences</button>
-          </div>
-        );
       default:
         return <div className="content-area">Select a tab to view content.</div>;
     }
@@ -793,7 +747,6 @@ const SeProfile = () => {
             <CgShoppingCart size={24} />
             <span>My Order</span>
           </button>
-          
           <button
             className={`nav-button ${activeTab === 'redeemPoints' ? 'active' : ''}`}
             onClick={() => setActiveTab('redeemPoints')}
@@ -815,13 +768,6 @@ const SeProfile = () => {
             <Settings size={24} />
             <span>Settings</span>
           </button>
-          {/* <button
-            className={`nav-button ${activeTab === 'manageNotifications' ? 'active' : ''}`}
-            onClick={() => setActiveTab('manageNotifications')}
-          >
-            <Bell size={24} />
-            <span>Manage Notifications</span>
-          </button> */}
         </nav>
         <main className="main-content">
           {renderContent()}

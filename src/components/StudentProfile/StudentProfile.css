@@ -25,6 +25,19 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
+.return-status {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #007bff;
+}
+
+.return-status.pending {
+  color: #ffc107;
+}
+
+.return-status.rejected {
+  color: #dc3545;
+}
 
 .profile-header {
   display: flex;
