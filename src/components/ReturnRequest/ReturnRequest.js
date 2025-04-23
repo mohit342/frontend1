@@ -74,7 +74,7 @@ const ReturnRequest = () => {
     <div className="return-request-container">
       <h2>Request Return for Order #{order.id}</h2>
       <div className="order-details">
-        <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+        {/* <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p> */}
         <p><strong>Total:</strong> ₹{order.total}</p>
         <div className="order-items">
           {JSON.parse(order.items).map((item, index) => (

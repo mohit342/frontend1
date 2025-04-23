@@ -352,14 +352,14 @@ function ProductDetailpage() {
                     </div>
                     <p className="review-comment100">{review.comment}</p>
                     <p className="review-date100">
-                      {new Date(review.created_at).toLocaleDateString()}
+                      {review.created_at
+                        ? new Date(review.created_at).toLocaleDateString()
+                        : "Date not available"}
                     </p>
                   </div>
                 ))}
               </div>
             )}
-
-           
           </div>
         </div>
       </div>

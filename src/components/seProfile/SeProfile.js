@@ -3,7 +3,7 @@ import "./SeProfile.css";
 import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag, Star, Zap } from 'lucide-react';
 import men from "../../assets/men.jpg";
 import supple from "../../assets/supplies.jpg";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Add useNavigate
 import { BiSolidSchool } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
 import axios from 'axios';
@@ -29,6 +29,8 @@ const SeProfile = () => {
   const [schoolRewards, setSchoolRewards] = useState([]);
   const [rewardsLoading, setRewardsLoading] = useState(false);
   const [rewardsError, setRewardsError] = useState(null);
+  const [returnStatuses, setReturnStatuses] = useState({}); // Add state for return statuses
+  const navigate = useNavigate(); // Add navigate hook
   const getImageSrc = (item) => {
     if (item.images && item.images.length > 0) {
       return `http://localhost:5000/${item.images[0].replace(/\\/g, "/")}`;
@@ -168,6 +170,15 @@ const SeProfile = () => {
     fetchTotalSchools();
   }, []);
 
+  const isWithinReturnPeriod = (createdAt) => {
+    if (!createdAt) return false;
+    const orderDate = new Date(createdAt);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - orderDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -178,8 +189,25 @@ const SeProfile = () => {
         const response = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
         let data = await response.json();
   
-        data = data.sort((a, b) => b.id - a.id);
-  
+        data = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        // Fetch return request status for each order
+        const returnStatusPromises = data.map(async (order) => {
+          try {
+            const response = await axios.get(`http://localhost:5000/api/orders/returns?order_id=${order.id}`);
+            return { orderId: order.id, status: response.data.status || null };
+          } catch (error) {
+            console.error(`Error fetching return status for order ${order.id}:`, error.message);
+            return { orderId: order.id, status: null };
+          }
+        });
+        const returnStatusesArray = await Promise.all(returnStatusPromises);
+        const returnStatusesMap = returnStatusesArray.reduce((acc, { orderId, status }) => {
+          acc[orderId] = status;
+          return acc;
+        }, {});
+        setReturnStatuses(returnStatusesMap);
+
         setOrders(data);
         setOrdersError(null);
       } catch (error) {
@@ -567,7 +595,15 @@ const SeProfile = () => {
                     <div className="order-header">
                       <div className="order-meta">
                         <span className="order-id">Order #: {order.id}</span>
-                        <span className="order-date">{order.createdAt}</span>
+                        <span className="order-date">
+                          {order.created_at
+                            ? new Date(order.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })
+                            : 'Date not available'}
+                        </span>
                       </div>
                     </div>
                     <div className="order-items">
@@ -620,6 +656,29 @@ const SeProfile = () => {
                         <span>Total:</span>
                         <span className="total-amount">₹{order.total}</span>
                       </div>
+                      {isWithinReturnPeriod(order.created_at) && !returnStatuses[order.id] && (
+                        <button
+                          className="btn-secondary"
+                          onClick={() => {
+                            if (!order.id) {
+                              alert('Invalid order ID');
+                              return;
+                            }
+                            navigate(`/return-request/${order.id}`);
+                          }}
+                        >
+                          Return
+                        </button>
+                      )}
+                      {returnStatuses[order.id] === 'approved' && (
+                        <p className="return-status">We will replace this product soon</p>
+                      )}
+                      {returnStatuses[order.id] === 'pending' && (
+                        <p className="return-status">Return request pending</p>
+                      )}
+                      {returnStatuses[order.id] === 'rejected' && (
+                        <p className="return-status">Return request rejected</p>
+                      )}
                     </div>
                   </div>
                 ))
@@ -730,14 +789,14 @@ const SeProfile = () => {
             className={`nav-button ${activeTab === 'Total Reward Earns' ? 'active' : ''}`}
             onClick={() => setActiveTab('Total Reward Earns')}
           >
-            <BiSolidSchool size={24} />
+            <Star size={24} />
             <span>Total Reward Earns</span>
           </button>
           <button
             className={`nav-button ${activeTab === 'Genrate coupons' ? 'active' : ''}`}
             onClick={() => setActiveTab('Genrate coupons')}
           >
-            <BiSolidSchool size={24} />
+            <Ticket size={24} />
             <span>Generate Coupons</span>
           </button>
           <button

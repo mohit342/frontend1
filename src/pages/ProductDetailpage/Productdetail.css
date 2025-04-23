@@ -1,4 +1,4 @@
-/* Container Layout */
+
 body {
   overflow-x: hidden;
 }
@@ -75,6 +75,28 @@ body {
   gap: 0.5rem;
   overflow-x: auto;
   padding: 0.5rem 0;
+  max-width: 450px; /* Limits container to fit ~5 thumbnails (80px * 5 + gaps) */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+}
+
+/* Custom Scrollbar Styling */
+.thumbnail-container100::-webkit-scrollbar {
+  height: 8px; /* Scrollbar height for horizontal scroll */
+}
+
+.thumbnail-container100::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
+  border-radius: 4px;
+}
+
+.thumbnail-container100::-webkit-scrollbar-thumb {
+  background: #2563eb; /* Scrollbar thumb color (matches theme) */
+  border-radius: 4px;
+}
+
+.thumbnail-container100::-webkit-scrollbar-thumb:hover {
+  background: #1d4ed8; /* Darker on hover */
 }
 
 .thumbnail100 {
@@ -85,6 +107,7 @@ body {
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s ease;
+  flex-shrink: 0; /* Prevent thumbnails from shrinking */
 }
 
 .thumbnail100.active {
@@ -201,13 +224,14 @@ body {
   color: white;
   border-color: #047313;
 }
+
 .product-info-sections {
   grid-column: 1 / -1; /* Make it span full grid width */
   max-width: 1200px;
   width: 100%;
   margin: 4rem auto;
   padding: 0 1rem;
-  background-color: transparent
+  background-color: transparent;
 }
 
 /* Description Section */
@@ -275,7 +299,6 @@ body {
 
 /* Review Section Styles */
 .reviews-section100 {
-
   margin-top: 3rem;
   margin-bottom: 3rem;
   padding: 2rem;
@@ -347,6 +370,7 @@ body {
   color: #4b5563;
   margin-right: 0.5rem;
 }
+
 .product-description100,
 .reviews-section100 {
   min-width: 100% !important; /* Makes sections take full width */
@@ -357,26 +381,31 @@ body {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
+
 .action-buttons100 {
   display: flex;
   gap: 10px;
   margin-top: 20px;
 }
+
 .add-to-wishlist100,
 .add-to-cart100 {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
 }
+
 .add-to-wishlist100 {
   background-color: #f0f0f0;
   border: 1px solid #ccc;
 }
+
 .add-to-cart100 {
   background-color: #28a745;
   color: white;
   border: none;
 }
+
 .star100 {
   font-size: 1.5rem;
   cursor: pointer;
@@ -431,9 +460,6 @@ body {
   background-color: #1d4ed8;
 }
 
-
-
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .product-detail-container100 {
@@ -441,9 +467,17 @@ body {
     gap: 2rem;
   }
 
+  .thumbnail-container100 {
+    max-width: 320px; /* Adjust for smaller screens (~4 thumbnails) */
+  }
+
   .thumbnail100 {
     width: 60px;
     height: 60px;
+  }
+
+  .thumbnail-container100::-webkit-scrollbar {
+    height: 6px; /* Thinner scrollbar on mobile */
   }
 
   .product-name100 {

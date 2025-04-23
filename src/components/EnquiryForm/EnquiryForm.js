@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./EnquiryForm.css";
-import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope } from "react-icons/fa";
-import { FaFacebook, FaTwitter, FaInstagram } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaInstagramSquare, FaLinkedin } from "react-icons/fa";
+import { BsYoutube } from "react-icons/bs";
 import ContactImage from "../../assets/lets.jpg";
 import Header from "../../components/header/Header";
 import Footer from "../../components/Footer/Footer";
@@ -101,14 +101,23 @@ const EnquiryForm = () => {
                                     <FaPhoneAlt /> 7374003601
                                 </p>
                                 <p>
-                                    <FaEnvelope /> info@mittsure.com
+                                    <FaEnvelope /> support@mittsure.com
                                 </p>
                             </div>
                             <div className="social-icons">
-                                <FaFacebook />
-                                <FaTwitter />
-                                <FaInstagram />
-                            </div>
+                                    <a href="https://www.youtube.com/@MittStore" target="_blank" >
+                                    <BsYoutube />
+                                    </a>
+                                    <a href="https://www.instagram.com/shopatmittstore/" target="_blank" >
+                                      <FaInstagramSquare />
+                                    </a>
+                                    {/* <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                                      <FaTwitter />
+                                    </a> */}
+                                    <a href="https://www.linkedin.com/company/mittsure-technologies-llp/" target="_blank" >
+                                      <FaLinkedin />
+                                    </a>
+                                  </div>
                         </div>
                     </div>
                 </div>

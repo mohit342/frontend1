@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import "./SchoolProfile.css";
 import { Heart, MapPin, Ticket, Gift, Settings, Bell, ShoppingBag, Star, Zap } from 'lucide-react';
 import { Link } from "react-router-dom";
-import { FaChildReaching } from "react-icons/fa6";
+import { BiSolidOffer } from "react-icons/bi";
 import { CgShoppingCart } from "react-icons/cg";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // Add useNavigate
 import axios from 'axios';
 
 const SchoolProfile = () => {
@@ -30,7 +30,9 @@ const SchoolProfile = () => {
   const [specialCouponsLoading, setSpecialCouponsLoading] = useState(false);
   const [specialCouponsError, setSpecialCouponsError] = useState(null);
   const [specialCoupons, setSpecialCoupons] = useState([]);
-  const [redeemPointsAmount, setRedeemPointsAmount] = useState(''); // State for redeem points input
+  const [redeemPointsAmount, setRedeemPointsAmount] = useState('');
+  const [returnStatuses, setReturnStatuses] = useState({}); // Add state for return statuses
+  const navigate = useNavigate(); // Add navigate hook
 
   const getImageSrc = (item) => {
     if (item.images && item.images.length > 0) {
@@ -99,11 +101,20 @@ const SchoolProfile = () => {
         points: pointsToRedeem,
       });
       alert(response.data.message);
-      setRedeemPointsAmount(''); // Reset input field
+      setRedeemPointsAmount('');
     } catch (error) {
       console.error('Error submitting redeem request:', error);
       alert(error.response?.data?.error || 'Failed to submit redeem request.');
     }
+  };
+
+  const isWithinReturnPeriod = (createdAt) => {
+    if (!createdAt) return false;
+    const orderDate = new Date(createdAt);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - orderDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
   };
 
   useEffect(() => {
@@ -161,7 +172,25 @@ const SchoolProfile = () => {
       try {
         const ordersResponse = await fetch(`http://localhost:5000/api/orders/email/${storedUser.email}`);
         let ordersData = await ordersResponse.json();
-        ordersData = ordersData.sort((a, b) => b.id - a.id);
+        ordersData = ordersData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        // Fetch return request status for each order
+        const returnStatusPromises = ordersData.map(async (order) => {
+          try {
+            const response = await axios.get(`http://localhost:5000/api/orders/returns?order_id=${order.id}`);
+            return { orderId: order.id, status: response.data.status || null };
+          } catch (error) {
+            console.error(`Error fetching return status for order ${order.id}:`, error.message);
+            return { orderId: order.id, status: null };
+          }
+        });
+        const returnStatusesArray = await Promise.all(returnStatusPromises);
+        const returnStatusesMap = returnStatusesArray.reduce((acc, { orderId, status }) => {
+          acc[orderId] = status;
+          return acc;
+        }, {});
+        setReturnStatuses(returnStatusesMap);
+
         setOrders(ordersData);
         setOrdersError(null);
       } catch (error) {
@@ -353,7 +382,7 @@ const SchoolProfile = () => {
       case 'specialCoupons':
         return (
           <div className="content-area">
-            <h2><Ticket className="icon" /> Special Coupons</h2>
+            <h2><BiSolidOffer  className="icon" /> Special Coupons</h2>
             {specialCouponsLoading ? (
               <p>Loading special coupons...</p>
             ) : specialCouponsError ? (
@@ -371,9 +400,9 @@ const SchoolProfile = () => {
                         <p className="code">Code: {coupon.code}</p>
                         <p className="discount">{coupon.discount_percentage}% off</p>
                         <p className="expiry">
-                          Valid until: {new Date(coupon.valid_until).toLocaleDateString()}
+                          Valid before: {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
-                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                        {/* <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p> */}
                       </div>
                     ))}
                   </>
@@ -428,7 +457,7 @@ const SchoolProfile = () => {
                         <h3>{coupon.code}</h3>
                         <p className="discount">{coupon.discount_percentage}% off</p>
                         <p className="expiry">
-                          Valid: {new Date(coupon.valid_from).toLocaleDateString()} -{' '}
+                          Valid: -{' '}
                           {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
                         <p className="type">{isStudentCoupon ? 'Student Coupon' : 'School Coupon'}</p>
@@ -477,7 +506,7 @@ const SchoolProfile = () => {
       case 'rewardPoints':
         return (
           <div className="content-area">
-            <h2><Gift className="icon" /> Total Reward Points</h2>
+            <h2><Gift className="icon" /> Total Purchase</h2>
             {studentRewardsLoading ? (
               <p>Loading student rewards...</p>
             ) : studentRewardsError ? (
@@ -487,7 +516,6 @@ const SchoolProfile = () => {
                 <div className="table-header">
                   <span className="table-column">Student Name</span>
                   <span className="table-column">Order Amount</span>
-                  {/* <span className="table-column">Points Awarded</span> */}
                   <span className="table-column">Purchase Date</span>
                 </div>
                 {studentRewards.length === 0 ? (
@@ -497,7 +525,6 @@ const SchoolProfile = () => {
                     <div key={index} className="table-row">
                       <span className="table-column">{data.student_name}</span>
                       <span className="table-column">₹{data.order_amount}</span>
-                      {/* <span className="table-column">{data.points_awarded} pts</span> */}
                       <span className="table-column">{data.purchase_date}</span>
                     </div>
                   ))
@@ -612,7 +639,15 @@ const SchoolProfile = () => {
                     <div className="order-header">
                       <div className="order-meta">
                         <span className="order-id">Order #: {order.id}</span>
-                        <span className="order-date">{order.createdAt}</span>
+                        <span className="order-date">
+                          {order.created_at
+                            ? new Date(order.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })
+                            : 'Date not available'}
+                        </span>
                       </div>
                     </div>
                     <div className="order-items">
@@ -665,6 +700,29 @@ const SchoolProfile = () => {
                         <span>Total:</span>
                         <span className="total-amount">₹{order.total}</span>
                       </div>
+                      {isWithinReturnPeriod(order.created_at) && !returnStatuses[order.id] && (
+                        <button
+                          className="btn-secondary"
+                          onClick={() => {
+                            if (!order.id) {
+                              alert('Invalid order ID');
+                              return;
+                            }
+                            navigate(`/return-request/${order.id}`);
+                          }}
+                        >
+                          Return
+                        </button>
+                      )}
+                      {returnStatuses[order.id] === 'approved' && (
+                        <p className="return-status">We will replace this product soon</p>
+                      )}
+                      {returnStatuses[order.id] === 'pending' && (
+                        <p className="return-status">Return request pending</p>
+                      )}
+                      {returnStatuses[order.id] === 'rejected' && (
+                        <p className="return-status">Return request rejected</p>
+                      )}
                     </div>
                   </div>
                 ))
@@ -702,8 +760,8 @@ const SchoolProfile = () => {
             className={`nav-button ${activeTab === 'rewardPoints' ? 'active' : ''}`}
             onClick={() => setActiveTab('rewardPoints')}
           >
-            <Gift size={24} />
-            <span>Total Reward Points</span>
+            <Star size={24} />
+            <span>Total Purched </span>
           </button>
           <button
             className={`nav-button ${activeTab === 'My order' ? 'active' : ''}`}
@@ -723,8 +781,8 @@ const SchoolProfile = () => {
             className={`nav-button ${activeTab === 'specialCoupons' ? 'active' : ''}`}
             onClick={() => setActiveTab('specialCoupons')}
           >
-            <Ticket size={24} />
-            <span>specialCoupons</span>
+            <BiSolidOffer size={24} />
+            <span>Special Coupons</span>
           </button>
           <button
             className={`nav-button ${activeTab === 'wishlist' ? 'active' : ''}`}

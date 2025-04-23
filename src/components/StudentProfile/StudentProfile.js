@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import "./StudentProfile.css";
 import { Heart, MapPin, Ticket, Settings, Bell, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
+import { BiSolidOffer } from "react-icons/bi";
+
 import { CgShoppingCart } from "react-icons/cg";
 import axios from 'axios';
 
@@ -383,13 +385,8 @@ const StudentProfile = () => {
                           Valid: {new Date(coupon.valid_from).toLocaleDateString()} -{' '}
                           {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
-                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
-                        <button
-                          className="btn-secondary"
-                          onClick={() => handleApplyCoupon(coupon.code)}
-                        >
-                          Apply Coupon
-                        </button>
+                        {/* <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p> */}
+                       
                       </div>
                     ))}
                   </>
@@ -401,7 +398,7 @@ const StudentProfile = () => {
       case 'specialCoupons':
         return (
           <div className="content-area">
-            <h2><Ticket className="icon" /> Special Coupons</h2>
+            <h2><BiSolidOffer  className="icon" /> Special Coupons</h2>
             {specialCouponsLoading ? (
               <p>Loading special coupons...</p>
             ) : specialCouponsError ? (
@@ -418,9 +415,9 @@ const StudentProfile = () => {
                         <p className="code">Code: {coupon.code}</p>
                         <p className="discount">{coupon.discount_percentage}% off</p>
                         <p className="expiry">
-                          Valid until: {new Date(coupon.valid_until).toLocaleDateString()}
+                          Valid before: {new Date(coupon.valid_until).toLocaleDateString()}
                         </p>
-                        <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p>
+                        {/* <p className="uses">Uses: {coupon.current_uses}/{coupon.max_uses}</p> */}
                       </div>
                     ))}
                   </>
@@ -684,7 +681,7 @@ const StudentProfile = () => {
             className={`nav-button ${activeTab === 'specialCoupons' ? 'active' : ''}`}
             onClick={() => setActiveTab('specialCoupons')}
           >
-            <Ticket size={24} />
+            <BiSolidOffer size={24} />
             <span>Special Coupon</span>
           </button>
           <button

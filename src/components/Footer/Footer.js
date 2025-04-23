@@ -1,6 +1,6 @@
 import React from "react";
 import "./Footer.css";
-import { ImFacebook2 } from "react-icons/im";
+import { BsYoutube  } from "react-icons/bs";
 import { FaTwitter } from "react-icons/fa6";
 import { FaInstagramSquare } from "react-icons/fa";
 import { FaLinkedin } from "react-icons/fa";
@@ -41,23 +41,23 @@ const Footer = () => {
         <div className="footer-section">
           <h3>Contact Us</h3>
           <ul>
-            <li><span>📍 B-121, Mangal Marg, Bapu Nagar,Jaipur (Raj)</span></li>
-            <li><span>📞 1800 891 7070</span></li>
-            <li><span>📧 info.mittlearn@gmail.com</span></li>
+            <li><span>📍  S-14, 3rd floor, Mangal Marg, Bapu Nagar, Jaipur (Raj.)</span></li>
+            <li><span>📞 7374003601</span></li>
+            <li><span>📧 support@mittsure.com</span></li>
           </ul>
         </div>
       </div>
       <div className="social-icons">
-        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-          <ImFacebook2 />
+        <a href="https://www.youtube.com/@MittStore" target="_blank" >
+        <BsYoutube />
         </a>
-        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.instagram.com/shopatmittstore/" target="_blank" >
           <FaInstagramSquare />
         </a>
-        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+        {/* <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
           <FaTwitter />
-        </a>
-        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+        </a> */}
+        <a href="https://www.linkedin.com/company/mittsure-technologies-llp/" target="_blank" >
           <FaLinkedin />
         </a>
       </div>
