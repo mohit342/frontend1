@@ -25,46 +25,7 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
-.return-status.pending {
-  background-color: #fff3cd; /* Light yellow background */
-  color: #856404; /* Dark yellow text */
-}
 
-.return-status.approved {
-  background-color: #d4edda; /* Light green background */
-  color: #155724; /* Dark green text */
-}
-
-.return-status.rejected {
-  background-color: #f8d7da; /* Light red background */
-  color: #721c24; /* Dark red text */
-}
-.btn-return {
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-
-.btn-return:hover {
-  background-color: #e55a5a; /* Darker shade of accent color */
-}
-
-/* Return Status Styling */
-.return-status {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  padding: 5px 10px;
-  border-radius: 20px;
-  display: inline-block;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
 
 .profile-header {
   display: flex;
@@ -349,6 +310,37 @@ body {
   text-align: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 } */
+.return-status {
+  margin-top: 0.5rem;
+  font-size: 0.85rem; /* Slightly smaller font for compactness */
+  font-weight: 600; /* Bold text for emphasis */
+  padding: 6px 12px; /* Padding for box-like appearance */
+  border-radius: 8px; /* Rounded corners for badge */
+  display: inline-block; /* Ensure it behaves as a box */
+  text-align: center; /* Center the text */
+  min-width: 120px; /* Fixed width for consistency */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border */
+  line-height: 1.2; /* Adjust line height for vertical centering */
+}
+
+.return-status.pending {
+  background-color: #fff3cd; /* Light yellow background */
+  color: #856404; /* Darker yellow text */
+  border-color: #ffeeba; /* Matching border */
+}
+
+.return-status.approved {
+  background-color: #d4edda; /* Light green background */
+  color: #155724; /* Darker green text */
+  border-color: #c3e6cb; /* Matching border */
+}
+
+.return-status.rejected {
+  background-color: #f8d7da; /* Light red background */
+  color: #721c24; /* Darker red text */
+  border-color: #f5c6cb; /* Matching border */
+}
 
 .coupon-blue {
   background: linear-gradient(135deg, #4a90e2, #5ca0eb);

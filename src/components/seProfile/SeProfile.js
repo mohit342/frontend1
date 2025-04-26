@@ -670,15 +670,15 @@ const SeProfile = () => {
                           Return
                         </button>
                       )}
-                      {returnStatuses[order.id] === 'approved' && (
-                        <p className="return-status">We will replace this product soon</p>
-                      )}
-                      {returnStatuses[order.id] === 'pending' && (
-                        <p className="return-status">Return request pending</p>
-                      )}
-                      {returnStatuses[order.id] === 'rejected' && (
-                        <p className="return-status">Return request rejected</p>
-                      )}
+                     {returnStatuses[order.id] === 'approved' && (
+                  <p className="return-status approved">We will replace this product soon</p>
+                )}
+                {returnStatuses[order.id] === 'pending' && (
+                  <p className="return-status pending">Return request pending</p>
+                )}
+                {returnStatuses[order.id] === 'rejected' && (
+                  <p className="return-status rejected">Return request rejected</p>
+                )}
                     </div>
                   </div>
                 ))
@@ -697,7 +697,7 @@ const SeProfile = () => {
               </div>
               <div className="points-value">
                 <h3>Value</h3>
-                <p className="value">₹{(redeemPoints / 100).toFixed(2)}</p>
+                <p className="value">₹{(redeemPoints / 1).toFixed(2)}</p>
               </div>
             </div>
             <div className="redeem-options">

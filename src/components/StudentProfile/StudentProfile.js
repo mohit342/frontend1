@@ -518,15 +518,15 @@ const StudentProfile = () => {
                           Return
                         </button>
                       )}
-                      {returnStatuses[order.id] === 'approved' && (
-                        <p className="return-status">We will replace this product soon</p>
-                      )}
-                      {returnStatuses[order.id] === 'pending' && (
-                        <p className="return-status">Return request pending</p>
-                      )}
-                      {returnStatuses[order.id] === 'rejected' && (
-                        <p className="return-status">Return request rejected</p>
-                      )}
+                     {returnStatuses[order.id] === 'approved' && (
+                  <p className="return-status approved">We will replace this product soon</p>
+                )}
+                {returnStatuses[order.id] === 'pending' && (
+                  <p className="return-status pending">Return request pending</p>
+                )}
+                {returnStatuses[order.id] === 'rejected' && (
+                  <p className="return-status rejected">Return request rejected</p>
+                )}
                     </div>
                   </div>
                 ))}

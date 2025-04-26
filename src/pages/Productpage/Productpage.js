@@ -78,10 +78,27 @@ const Productpage = () => {
     }
   };
 
+  // Helper function to extract meaningful keywords from search term
+  const getSearchKeywords = (term) => {
+    const stopWords = ["i", "am", "looking", "for", "a", "an", "the", "in", "on", "at"];
+    return term
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !stopWords.includes(word));
+  };
+
   const filteredProducts = products.filter((product) => {
+    // Get keywords from search term
+    const keywords = getSearchKeywords(searchTerm);
+
+    // If no keywords, show all products (or apply other filters)
     const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      keywords.length === 0 ||
+      keywords.some((keyword) =>
+        (product.name && product.name.toLowerCase().includes(keyword)) ||
+        (product.description && product.description.toLowerCase().includes(keyword))
+      );
+
     const matchesCategory =
       !selectedCategory || product.category === selectedCategory;
 
@@ -137,23 +154,7 @@ const Productpage = () => {
       <Header setSearchTerm={setSearchTerm} />
       <main className="main-content1">
         <div className="categories-container1">
-          {/* <button
-            onClick={() => setSelectedCategory(null)}
-            className={`category-pill1 ${!selectedCategory ? "active" : ""}`}
-          >
-            All
-          </button> */}
-          {/* {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`category-pill1 ${
-                selectedCategory === category ? "active" : ""
-              }`}
-            >
-              {category}
-            </button>
-          ))} */}
+          {/* Category buttons commented out as in original code */}
         </div>
 
         <div className="products-grid1">
@@ -179,19 +180,6 @@ const Productpage = () => {
                   <div className="category-tag1">
                     <span>{product.category}</span>
                   </div>
-                  {/* <button
-                    className="favorite-button1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(product.id);
-                    }}
-                  >
-                    <Heart
-                      size={20}
-                      fill={favorites.has(product.id) ? "red" : "none"}
-                      color={favorites.has(product.id) ? "red" : "grey"}
-                    />
-                  </button> */}
                 </div>
 
                 <div className="product-details1">
@@ -231,7 +219,7 @@ const Productpage = () => {
             ))
           ) : (
             <div className="no-products1">
-              No products found for this category or subcategory.
+              No products found for this category, subcategory, or search term.
             </div>
           )}
         </div>

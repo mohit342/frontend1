@@ -626,7 +626,8 @@ input:checked + .slider:before {
   border-top: 1px solid #f0f0f0;
   padding-top: 15px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .order-total {
